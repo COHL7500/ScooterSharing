@@ -1,0 +1,37 @@
+<resources>
+    <string name="app_name">Scooter Sharing</string>
+    <string name="update_ride_button">Update Ride</string>
+    <string name="update_name">The current scooter name</string>
+    <string name="update_location">The current scooter location</string>
+    <string name="edit_scooter_name">Enter the scooter name…</string>
+    <string name="edit_scooter_location">Enter the location…</string>
+    <string name="start_ride_button">Start Ride</string>
+    <string name="list_rides_button">List Rides</string>
+    <string name ="sign_out_button">Sign Out</string>
+    <string name="alert_title_deleteRides">Delete Ride</string>
+    <string name="alert_supporting_text_deleteRides">Are you sure you want to permanently delete ride?</string>
+    <string name="alert_title_startRide">Start Ride</string>
+    <string name="alert_supporting_text_startRide">Are you sure you want to start ride?</string>
+    <string name="alert_title_UpdateRide">Update Ride</string>
+    <string name="alert_supporting_text_UpdateRide">Are you sure you want to update location?</string>
+    <string name="cancel">Cancel</string>
+    <string name="decline">Decline</string>
+    <string name="accept">Accept</string>
+    <string name="DATABASE_URL">https://moapd-2023-6e1fd-default-rtdb.europe-west1.firebasedatabase.app/</string>
+
+
+    <string-array name="scooter_names">
+        <item>CPH001</item>
+        <item>CPH002</item>
+        <item>CPH003</item>
+    </string-array>
+
+    <plurals name="minutes_of_ride">
+        <item quantity="one"> %d minute.</item>
+        <item quantity="other">%d minutes.</item>
+    </plurals>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+
+</resources>
