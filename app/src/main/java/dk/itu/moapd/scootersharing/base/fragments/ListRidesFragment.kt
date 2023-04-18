@@ -46,25 +46,24 @@ import dk.itu.moapd.scootersharing.base.activities.LoginActivity
 import dk.itu.moapd.scootersharing.base.activities.StartRideActivity
 import dk.itu.moapd.scootersharing.base.activities.UpdateRideActivity
 import dk.itu.moapd.scootersharing.base.adapters.CustomFirebaseAdapter
+import dk.itu.moapd.scootersharing.base.databinding.FragmentListRidesBinding
 import dk.itu.moapd.scootersharing.base.databinding.FragmentMainBinding
 import dk.itu.moapd.scootersharing.base.models.Scooter
 
 /**
 Class for binding the view and instantiating Scooter.
  */
-class MainFragment : Fragment() {
+class ListRidesFragment : Fragment() {
 
-    private var _binding: FragmentMainBinding? = null
+    private var _binding: FragmentListRidesBinding? = null
     private val binding
         get() = checkNotNull(_binding) {
 
         }
 
-    private lateinit var startRideButton: Button
-    private lateinit var updateRideButton: Button
-    private lateinit var listRidesButton: Button
-    private lateinit var signOutButton: Button
     private lateinit var auth: FirebaseAuth
+
+    private lateinit var recyclerView: RecyclerView
 
     private lateinit var database: DatabaseReference
 
@@ -98,48 +97,49 @@ class MainFragment : Fragment() {
                               savedInstanceState: Bundle?
     ): View {
 
-        _binding = FragmentMainBinding.inflate(inflater, container, false)
+        _binding = FragmentListRidesBinding.inflate(inflater, container, false)
+        recyclerView = binding.recyclerView
+        recyclerView.layoutManager = LinearLayoutManager(activity)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-
-        startRideButton = binding.startRideButton
-        updateRideButton = binding.updateRideButton
-        listRidesButton = binding.listRidesButton
-        signOutButton = binding.signOutButton
-
         /**
          * Sets name and location of scooter, then clears the text fields.
          */
-        startRideButton.setOnClickListener {
-            val intent = Intent(activity, StartRideActivity::class.java)
-            startActivity(intent)
+        binding.recyclerView.layoutManager = LinearLayoutManager(activity)
+        binding.recyclerView.addItemDecoration(DividerItemDecoration(activity, DividerItemDecoration.VERTICAL))
+        binding.recyclerView.adapter = adapter
+
+        val swipeHandler = object : SwipeToDeleteCallback() {
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder,
+                                  direction: Int) {
+                super.onSwiped(viewHolder, direction)
+
+                MaterialAlertDialogBuilder(requireContext())
+                    .setTitle(getString(R.string.alert_title_deleteRides))
+                    .setMessage(getString(R.string.alert_supporting_text_deleteRides))
+
+                    .setNegativeButton(getString(R.string.decline)) { _, _ ->
+                    }
+                    .setPositiveButton(getString(R.string.accept)) { _, _ ->
+                        val adapter = recyclerView.adapter as CustomFirebaseAdapter
+
+                        adapter.getRef(viewHolder.adapterPosition).removeValue()
+
+                        Toast.makeText(viewHolder.itemView.context, "Ride deleted!",
+                            Toast.LENGTH_SHORT)
+                            .show()
+                    }
+                    .show()
+            }
+
         }
 
-        updateRideButton.setOnClickListener {
-            val intent = Intent(activity, UpdateRideActivity::class.java)
-            startActivity(intent)
-        }
-
-        listRidesButton.setOnClickListener {
-
-            val intent = Intent(activity, ListRidesActivity::class.java)
-            startActivity(intent)
-        }
-
-        signOutButton.setOnClickListener {
-            auth.signOut()
-
-            Toast.makeText(activity, "User logged in the app.",
-                Toast.LENGTH_SHORT)
-                .show()
-            val intent = Intent(activity, LoginActivity::class.java)
-            startActivity(intent)
-
-        }
+        val itemTouchHelper = ItemTouchHelper(swipeHandler)
+        itemTouchHelper.attachToRecyclerView(recyclerView)
     }
 
     override fun onDestroyView() {

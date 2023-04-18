@@ -3,15 +3,18 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <application
-        android:largeHeap="true"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:largeHeap="true"
         android:supportsRtl="true"
         android:theme="@style/Theme.ScooterSharing"
         tools:targetApi="31">
+        <activity
+            android:name=".activities.ListRidesActivity"
+            android:exported="false" />
         <activity
             android:name=".activities.LoginActivity"
             android:exported="false" />
