@@ -133,7 +133,7 @@ class MainFragment : Fragment() {
         signOutButton.setOnClickListener {
             auth.signOut()
 
-            Toast.makeText(activity, "User logged in the app.",
+            Toast.makeText(activity, "User logged out of the app.",
                 Toast.LENGTH_SHORT)
                 .show()
             val intent = Intent(activity, LoginActivity::class.java)
