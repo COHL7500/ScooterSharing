@@ -52,21 +52,10 @@ class GeoHelper(private val context: Context) {
         return stringBuilder.toString()
     }
 
-    fun setAddress(addressTextField: TextInputLayout, latitude: Double, longitude: Double) {
+    @Suppress("DEPRECATION")
+    fun getAddress(latitude: Double, longitude: Double) : String? {
         val geocoder = Geocoder(context, Locale.getDefault())
-        val geocodeListener = Geocoder.GeocodeListener { addresses ->
-            addresses.firstOrNull()?.toAddressString()?.let { address ->
-                addressTextField?.editText?.setText(address)
-            }
-        }
-        if (Build.VERSION.SDK_INT >= 33)
-            geocoder.getFromLocation(latitude, longitude, 1, geocodeListener)
-        else
-            geocoder.getFromLocation(latitude, longitude, 1)?.let { addresses ->
-                addresses.firstOrNull()?.toAddressString()?.let { address ->
-                    addressTextField?.editText?.setText(address)
-                }
-            }
+        return geocoder.getFromLocation(latitude, longitude, 1)?.firstOrNull()?.toAddressString()
     }
 
     private fun checkPermission() =

@@ -106,7 +106,7 @@ class MapFragment : Fragment() {
                         latitudeTextField.editText?.setText(location.latitude.toString())
                         longitudeTextField.editText?.setText(location.longitude.toString())
                         timeTextField.editText?.setText(location.time.toDateString())
-                        GeoHelper.setAddress(addressTextField,location.latitude,location.longitude)
+                        addressTextField.editText?.setText(GeoHelper.getAddress(location.latitude,location.longitude))
                     }
                 }
             }
