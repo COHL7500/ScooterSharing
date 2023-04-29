@@ -34,9 +34,7 @@ import dk.itu.moapd.scootersharing.base.databinding.ActivityMainBinding
  Class for binding the view and instantiating Scooter.
  */
 class MainActivity : AppCompatActivity() {
-
     private lateinit var binding: ActivityMainBinding
-
     private lateinit var auth: FirebaseAuth
 
     private fun startLoginActivity() {
@@ -44,11 +42,6 @@ class MainActivity : AppCompatActivity() {
         startActivity(intent)
         finish()
     }
-
-    /* TODO: This needs to be commented out everytime running MainActivityTest.
-        Make it work without needing to comment it out.
-     */
-
 
     override fun onStart() {
         super.onStart()

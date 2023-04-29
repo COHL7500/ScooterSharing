@@ -29,12 +29,14 @@ import dk.itu.moapd.scootersharing.base.activities.*
 import dk.itu.moapd.scootersharing.base.adapters.CustomFirebaseAdapter
 import dk.itu.moapd.scootersharing.base.databinding.FragmentMapBinding
 import dk.itu.moapd.scootersharing.base.models.Scooter
+import dk.itu.moapd.scootersharing.base.utils.GeoHelper
 import java.text.SimpleDateFormat
 import java.util.*
 
 class MapFragment : Fragment() {
 
     private var _binding: FragmentMapBinding? = null
+    private lateinit var GeoHelper: GeoHelper
     private val binding
         get() = checkNotNull(_binding) {
 
@@ -42,8 +44,6 @@ class MapFragment : Fragment() {
 
     private lateinit var database: DatabaseReference
     private lateinit var auth: FirebaseAuth
-    private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
-    private lateinit var locationCallback: LocationCallback
 
     private lateinit var latitudeTextField: TextInputLayout
     private lateinit var longitudeTextField: TextInputLayout
@@ -60,6 +60,7 @@ class MapFragment : Fragment() {
         database =
             Firebase.database("https://moapd-2023-6e1fd-default-rtdb.europe-west1.firebasedatabase.app/").reference
         auth = FirebaseAuth.getInstance()
+        GeoHelper = GeoHelper(requireContext())
 
         auth.currentUser?.let {
             val query = database.child("scooters")
@@ -96,9 +97,7 @@ class MapFragment : Fragment() {
     }
 
     private fun startLocationAware() {
-        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireContext())
-
-        locationCallback = object: LocationCallback() {
+        GeoHelper.locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
                 super.onLocationResult(locationResult)
 
@@ -107,7 +106,7 @@ class MapFragment : Fragment() {
                         latitudeTextField.editText?.setText(location.latitude.toString())
                         longitudeTextField.editText?.setText(location.longitude.toString())
                         timeTextField.editText?.setText(location.time.toDateString())
-                        setAddress(location.latitude,location.longitude)
+                        GeoHelper.setAddress(addressTextField,location.latitude,location.longitude)
                     }
                 }
             }
@@ -120,56 +119,14 @@ class MapFragment : Fragment() {
         }
     }
 
-    private fun Address.toAddressString() : String {
-        val address = this
-        val stringBuilder = StringBuilder()
-        stringBuilder.apply {
-            append(address.getAddressLine(0)).append("\n")
-            append(address.locality).append("\n")
-            append(address.postalCode).append("\n")
-            append(address.countryName)
-        }
-        return stringBuilder.toString()
-    }
-    private fun setAddress(latitude: Double, longitude: Double) {
-        val geocoder = Geocoder(requireContext(), Locale.getDefault())
-        val geocodeListener = Geocoder.GeocodeListener { addresses ->
-            addresses.firstOrNull()?.toAddressString()?.let { address ->
-                addressTextField?.editText?.setText(address)
-            }
-        }
-        if (Build.VERSION.SDK_INT >= 33)
-            geocoder.getFromLocation(latitude, longitude, 1, geocodeListener)
-        else
-            geocoder.getFromLocation(latitude, longitude, 1)?.let { addresses ->
-                addresses.firstOrNull()?.toAddressString()?.let { address ->
-                    addressTextField?.editText?.setText(address)
-                }
-            }
-    }
-
-    private fun checkPermission() =
-        checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PermissionChecker.PERMISSION_GRANTED &&
-                checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PermissionChecker.PERMISSION_GRANTED
-
-    @SuppressLint("MissingPermission")
-    private fun subscribeToLocationUpdates() {
-        if(checkPermission()) return
-        val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5).build()
-        fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
-    }
-    private fun unsubscribeToLocationUpdates() {
-        fusedLocationProviderClient.removeLocationUpdates(locationCallback)
-    }
-
     override fun onResume() {
         super.onResume()
-        subscribeToLocationUpdates()
+        GeoHelper.subscribeToLocationUpdates()
     }
 
     override fun onPause() {
         super.onPause()
-        unsubscribeToLocationUpdates()
+        GeoHelper.unsubscribeToLocationUpdates()
     }
 
     override fun onDestroyView() {

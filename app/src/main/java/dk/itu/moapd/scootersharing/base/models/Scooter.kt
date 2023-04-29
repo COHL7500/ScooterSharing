@@ -26,15 +26,10 @@ package dk.itu.moapd.scootersharing.base.models
  * Representing the Scooter name entity.
  * Consists of the name of the scooter and scooter location.
  */
-data class Scooter(val name: String? = "", var where: String? = "ITU", var timestamp: Long? = System.currentTimeMillis(),
+data class Scooter(val name: String? = "", var where: String? = "ITU" /*var startRideLocation: ArrayList<Double>? = ArrayList<Double>()*/, var timestamp: Long? = System.currentTimeMillis(),
 val imgURL: String? = "catsquish.jpg") {
 
     override fun toString(): String {
         return "Scooter(name=$name, location=$where, timestamp=$timestamp)"
     }
-
-
-
-
-
 }
