@@ -22,23 +22,23 @@
 
 package dk.itu.moapd.scootersharing.base.fragments
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.Toast
+import androidx.core.content.ContextCompat.checkSelfPermission
 import androidx.fragment.app.Fragment
 import com.firebase.ui.database.FirebaseRecyclerOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
-import dk.itu.moapd.scootersharing.base.activities.ListRidesActivity
-import dk.itu.moapd.scootersharing.base.activities.LoginActivity
-import dk.itu.moapd.scootersharing.base.activities.StartRideActivity
-import dk.itu.moapd.scootersharing.base.activities.UpdateRideActivity
+import dk.itu.moapd.scootersharing.base.activities.*
 import dk.itu.moapd.scootersharing.base.adapters.CustomFirebaseAdapter
 import dk.itu.moapd.scootersharing.base.databinding.FragmentMainBinding
 import dk.itu.moapd.scootersharing.base.models.Scooter
@@ -58,6 +58,7 @@ class MainFragment : Fragment() {
     private lateinit var updateRideButton: Button
     private lateinit var listRidesButton: Button
     private lateinit var signOutButton: Button
+    private lateinit var mapButton: Button
     private lateinit var auth: FirebaseAuth
 
     private lateinit var database: DatabaseReference
@@ -65,6 +66,7 @@ class MainFragment : Fragment() {
 
     companion object {
         lateinit var adapter: CustomFirebaseAdapter
+        private const val ALL_PERMISSIONS_RESULT = 1011
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -104,6 +106,7 @@ class MainFragment : Fragment() {
         updateRideButton = binding.updateRideButton
         listRidesButton = binding.listRidesButton
         signOutButton = binding.signOutButton
+        mapButton = binding.mapButton
 
         /**
          * Sets name and location of scooter, then clears the text fields.
@@ -134,6 +137,39 @@ class MainFragment : Fragment() {
             startActivity(intent)
 
         }
+
+        mapButton.setOnClickListener {
+            val intent = Intent(activity, MapActivity::class.java)
+            startActivity(intent)
+        }
+
+        requestUserPermissions()
+    }
+
+    private fun permissionsToRequest(permissions: ArrayList<String>): ArrayList<String> {
+
+        val result: ArrayList<String> = ArrayList()
+        for (permission in permissions)
+            if (checkSelfPermission(requireContext(), permission) != PackageManager.PERMISSION_GRANTED)
+                result.add(permission)
+
+        return result
+    }
+
+
+    private fun requestUserPermissions() {
+
+        val permissions: ArrayList<String> = ArrayList()
+        permissions.add(Manifest.permission.ACCESS_FINE_LOCATION)
+        permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION)
+
+        val permissionsToRequest = permissionsToRequest(permissions)
+
+        if (permissionsToRequest.size > 0)
+            requestPermissions(
+                permissionsToRequest.toTypedArray(),
+                ALL_PERMISSIONS_RESULT
+            )
     }
 
     override fun onDestroyView() {

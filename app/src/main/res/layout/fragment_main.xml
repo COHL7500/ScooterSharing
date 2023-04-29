@@ -96,6 +96,28 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center"
+        android:layout_margin="5dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/map_button"
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:background="@color/purple_500"
+            android:drawableStart="@drawable/baseline_map_24"
+            android:drawableTint="#FFFFFF"
+            android:paddingStart="10dp"
+            android:paddingEnd="20dp"
+            android:text="@string/map"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:layout_margin="5dp"
         android:gravity="center"
         android:orientation="horizontal">
