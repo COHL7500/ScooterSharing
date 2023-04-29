@@ -114,16 +114,4 @@
             android:textColor="@color/white"
             android:textSize="16sp" />
     </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerView"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:paddingTop="20dp" />
-
-    </LinearLayout>
 </LinearLayout>

@@ -73,7 +73,6 @@ class UpdateRideFragment : Fragment() {
 
         scooterLocation = binding.editTextLocation
         updateRideButton = binding.updateRideButton2
-        scooterLocation.hint = adapter.getItem(0).where
 
         /**
          * Sets name and location of scooter, then clears the text fields.

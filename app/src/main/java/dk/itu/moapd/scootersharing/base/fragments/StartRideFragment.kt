@@ -96,11 +96,11 @@ class StartRideFragment : Fragment() {
                     }
                     .setPositiveButton(getString(R.string.accept)) { _, _ ->
 
-                        var name = scooterName.text.toString()
+                        val name = scooterName.text.toString()
 
                         if (name.isNotEmpty()) {
                             val timestamp = randomDate()
-                            val scooter = Scooter(name, scooterLocation.text.toString(), timestamp)
+                            val scooter = Scooter(name, scooterLocation.text.toString(), timestamp, "scooter_thumbnail.png")
 
                             auth.currentUser?.let { user ->
                                 val uid = database.child("scooters")

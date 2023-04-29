@@ -22,12 +22,10 @@
 
 package dk.itu.moapd.scootersharing.base.fragments
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -41,13 +39,8 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 import dk.itu.moapd.scootersharing.base.*
-import dk.itu.moapd.scootersharing.base.activities.ListRidesActivity
-import dk.itu.moapd.scootersharing.base.activities.LoginActivity
-import dk.itu.moapd.scootersharing.base.activities.StartRideActivity
-import dk.itu.moapd.scootersharing.base.activities.UpdateRideActivity
 import dk.itu.moapd.scootersharing.base.adapters.CustomFirebaseAdapter
 import dk.itu.moapd.scootersharing.base.databinding.FragmentListRidesBinding
-import dk.itu.moapd.scootersharing.base.databinding.FragmentMainBinding
 import dk.itu.moapd.scootersharing.base.models.Scooter
 
 /**
