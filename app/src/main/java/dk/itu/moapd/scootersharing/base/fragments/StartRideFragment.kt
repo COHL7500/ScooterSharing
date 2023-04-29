@@ -10,6 +10,8 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import com.firebase.ui.database.FirebaseRecyclerOptions
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationResult
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
@@ -21,11 +23,13 @@ import dk.itu.moapd.scootersharing.base.activities.MainActivity
 import dk.itu.moapd.scootersharing.base.adapters.CustomFirebaseAdapter
 import dk.itu.moapd.scootersharing.base.databinding.FragmentStartRideBinding
 import dk.itu.moapd.scootersharing.base.models.Scooter
+import dk.itu.moapd.scootersharing.base.utils.GeoHelper
 import java.util.*
 
 class StartRideFragment : Fragment() {
 
     private var _binding: FragmentStartRideBinding? = null
+    private lateinit var GeoHelper: GeoHelper
     private val binding
         get() = checkNotNull(_binding) {
 
@@ -34,6 +38,7 @@ class StartRideFragment : Fragment() {
     private lateinit var scooterName: EditText
     private lateinit var scooterLocation: EditText
     private lateinit var startRideButton: Button
+    private lateinit var coordLocation: Pair<Double,Double>
 
     private lateinit var auth: FirebaseAuth
     private lateinit var database: DatabaseReference
@@ -42,11 +47,11 @@ class StartRideFragment : Fragment() {
         lateinit var adapter: CustomFirebaseAdapter
     }
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         database = Firebase.database("https://moapd-2023-6e1fd-default-rtdb.europe-west1.firebasedatabase.app/").reference
         auth = FirebaseAuth.getInstance()
+        GeoHelper = GeoHelper(requireContext())
 
         auth.currentUser?.let {
             val query = database.child("scooters")
@@ -59,6 +64,15 @@ class StartRideFragment : Fragment() {
                 .build()
 
             adapter = CustomFirebaseAdapter(options)
+        }
+
+        GeoHelper.locationCallback = object : LocationCallback() {
+            override fun onLocationResult(locationResult: LocationResult) {
+                locationResult.lastLocation?.let { location ->
+                    super.onLocationResult(locationResult)
+                    coordLocation = Pair(location.latitude,location.longitude)
+                }
+            }
         }
     }
 
@@ -79,38 +93,23 @@ class StartRideFragment : Fragment() {
         scooterLocation = binding.editTextLocation
         startRideButton = binding.startRideButton
 
-        /**
-         * Sets name and location of scooter, then clear the text fields.
-         */
         startRideButton.setOnClickListener {
-
-            if (scooterName.text.isNotEmpty() &&
-                scooterLocation.text.isNotEmpty()
-            ) {
-
+            if (scooterName.text.isNotEmpty() && scooterLocation.text.isNotEmpty()) {
                 MaterialAlertDialogBuilder(requireContext())
                     .setTitle(getString(R.string.alert_title_startRide))
                     .setMessage(getString(R.string.alert_supporting_text_startRide))
-
-                    .setNegativeButton(getString(R.string.decline)) { _, _ ->
-                    }
+                    .setNegativeButton(getString(R.string.decline)) { _, _ -> }
                     .setPositiveButton(getString(R.string.accept)) { _, _ ->
-
                         val name = scooterName.text.toString()
 
                         if (name.isNotEmpty()) {
                             val timestamp = randomDate()
-                            val scooter = Scooter(name, scooterLocation.text.toString(), timestamp, "scooter_thumbnail.png")
+                            val scooter = Scooter(name, coordLocation.first, coordLocation.second, timestamp, "scooter_thumbnail.png")
 
                             auth.currentUser?.let { user ->
-                                val uid = database.child("scooters")
-                                    .push()
-                                    .key
-
+                                val uid = database.child("scooters").push().key
                                 uid?.let {
-                                    database.child("scooters")
-                                        .child(it)
-                                        .setValue(scooter)
+                                    database.child("scooters").child(it).setValue(scooter)
                                 }
                             }
                         }
@@ -136,6 +135,16 @@ class StartRideFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    override fun onResume() {
+        super.onResume()
+        GeoHelper.subscribeToLocationUpdates()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        GeoHelper.unsubscribeToLocationUpdates()
     }
 
     /**

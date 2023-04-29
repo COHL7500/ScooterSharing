@@ -15,29 +15,25 @@ class CustomFirebaseAdapter(options: FirebaseRecyclerOptions<Scooter>)
     : FirebaseRecyclerAdapter<Scooter, CustomFirebaseAdapter.ViewHolder>
     (options) {
 
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder
-        {
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
             val inflater = LayoutInflater.from(parent.context)
             val binding = ListRidesBinding.inflate(inflater, parent, false)
 
             return ViewHolder(binding)
         }
 
-        override fun onBindViewHolder(holder: ViewHolder, position: Int, scooter: Scooter)
-        {
+        override fun onBindViewHolder(holder: ViewHolder, position: Int, scooter: Scooter) {
             holder.bind(scooter)
         }
 
     class ViewHolder(private val binding: ListRidesBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(scooter: Scooter) {
             binding.scooterName.text = scooter.name
-            binding.scooterLocation.text = scooter.where
+            binding.scooterLocation.text = scooter.startLatitude.toString() + ", " + scooter.startLongitude.toString()
             binding.scooterTimestamp.text = scooter.timestamp.toString()
 
             val storage = Firebase.storage("gs://moapd-2023-6e1fd.appspot.com").reference
             val imageRef = scooter.imgURL?.let { storage.child(it) }
-
-
 
             imageRef?.downloadUrl?.addOnSuccessListener {
                 Glide.with(itemView.context)

@@ -55,11 +55,8 @@ class ListRidesFragment : Fragment() {
         }
 
     private lateinit var auth: FirebaseAuth
-
     private lateinit var recyclerView: RecyclerView
-
     private lateinit var database: DatabaseReference
-
 
     companion object {
         lateinit var adapter: CustomFirebaseAdapter
@@ -81,8 +78,6 @@ class ListRidesFragment : Fragment() {
 
             adapter = CustomFirebaseAdapter(options)
         }
-
-
     }
 
     override fun onCreateView(inflater: LayoutInflater,
@@ -107,16 +102,13 @@ class ListRidesFragment : Fragment() {
         binding.recyclerView.adapter = adapter
 
         val swipeHandler = object : SwipeToDeleteCallback() {
-            override fun onSwiped(viewHolder: RecyclerView.ViewHolder,
-                                  direction: Int) {
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 super.onSwiped(viewHolder, direction)
 
                 MaterialAlertDialogBuilder(requireContext())
                     .setTitle(getString(R.string.alert_title_deleteRides))
                     .setMessage(getString(R.string.alert_supporting_text_deleteRides))
-
-                    .setNegativeButton(getString(R.string.decline)) { _, _ ->
-                    }
+                    .setNegativeButton(getString(R.string.decline)) { _, _ -> }
                     .setPositiveButton(getString(R.string.accept)) { _, _ ->
                         val adapter = recyclerView.adapter as CustomFirebaseAdapter
 

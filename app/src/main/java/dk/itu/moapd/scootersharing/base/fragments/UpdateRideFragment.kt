@@ -78,20 +78,14 @@ class UpdateRideFragment : Fragment() {
          * Sets name and location of scooter, then clears the text fields.
          */
         updateRideButton.setOnClickListener {
-
             MaterialAlertDialogBuilder(requireContext())
                 .setTitle(getString(R.string.alert_title_UpdateRide))
                 .setMessage(getString(R.string.alert_supporting_text_UpdateRide))
-
-                .setNegativeButton(getString(R.string.decline)) { _, _ ->
-                }
+                .setNegativeButton(getString(R.string.decline)) { _, _ -> }
                 .setPositiveButton(getString(R.string.accept)) { _, _ ->
-
                     val location = scooterLocation.text.toString().trim()
-
                     if (location.isNotEmpty()) {
-
-                        adapter.getItem(0).where = location
+                        //adapter.getItem(0).where = location
                         scooterLocation.text.clear()
 
                         adapter.getRef(0).setValue(adapter.getItem(0))
