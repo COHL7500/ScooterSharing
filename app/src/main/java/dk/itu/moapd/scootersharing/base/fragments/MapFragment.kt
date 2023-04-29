@@ -2,6 +2,9 @@ package dk.itu.moapd.scootersharing.base.fragments
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.location.Address
+import android.location.Geocoder
+import android.os.Build
 import android.os.Bundle
 import android.os.Looper
 import android.view.LayoutInflater
@@ -45,6 +48,7 @@ class MapFragment : Fragment() {
     private lateinit var latitudeTextField: TextInputLayout
     private lateinit var longitudeTextField: TextInputLayout
     private lateinit var timeTextField: TextInputLayout
+    private lateinit var addressTextField: TextInputLayout
 
     companion object {
         lateinit var adapter: CustomFirebaseAdapter
@@ -86,6 +90,7 @@ class MapFragment : Fragment() {
         latitudeTextField = binding.contentMap.latitudeTextField
         longitudeTextField = binding.contentMap.longitudeTextField
         timeTextField = binding.contentMap.timeTextField
+        addressTextField = binding.contentMap.addressTextField
 
         startLocationAware()
     }
@@ -102,6 +107,7 @@ class MapFragment : Fragment() {
                         latitudeTextField.editText?.setText(location.latitude.toString())
                         longitudeTextField.editText?.setText(location.longitude.toString())
                         timeTextField.editText?.setText(location.time.toDateString())
+                        setAddress(location.latitude,location.longitude)
                     }
                 }
             }
@@ -112,6 +118,34 @@ class MapFragment : Fragment() {
                 return format.format(date)
             }
         }
+    }
+
+    private fun Address.toAddressString() : String {
+        val address = this
+        val stringBuilder = StringBuilder()
+        stringBuilder.apply {
+            append(address.getAddressLine(0)).append("\n")
+            append(address.locality).append("\n")
+            append(address.postalCode).append("\n")
+            append(address.countryName)
+        }
+        return stringBuilder.toString()
+    }
+    private fun setAddress(latitude: Double, longitude: Double) {
+        val geocoder = Geocoder(requireContext(), Locale.getDefault())
+        val geocodeListener = Geocoder.GeocodeListener { addresses ->
+            addresses.firstOrNull()?.toAddressString()?.let { address ->
+                addressTextField?.editText?.setText(address)
+            }
+        }
+        if (Build.VERSION.SDK_INT >= 33)
+            geocoder.getFromLocation(latitude, longitude, 1, geocodeListener)
+        else
+            geocoder.getFromLocation(latitude, longitude, 1)?.let { addresses ->
+                addresses.firstOrNull()?.toAddressString()?.let { address ->
+                    addressTextField?.editText?.setText(address)
+                }
+            }
     }
 
     private fun checkPermission() =

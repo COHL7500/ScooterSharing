@@ -39,6 +39,7 @@
     <string name="latitude_text">Latitude</string>
     <string name="longitude_text">Longitude</string>
     <string name="time_text">Time</string>
+    <string name="address_text">Address</string>
 
 
 </resources>

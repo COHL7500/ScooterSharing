@@ -156,7 +156,6 @@ class MainFragment : Fragment() {
         return result
     }
 
-
     private fun requestUserPermissions() {
 
         val permissions: ArrayList<String> = ArrayList()
