@@ -1,17 +1,22 @@
 package dk.itu.moapd.scootersharing.base.fragments
 
-import android.content.Intent
+import android.Manifest
+import android.annotation.SuppressLint
 import android.os.Bundle
+import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
+import androidx.core.content.PermissionChecker
+import androidx.core.content.PermissionChecker.checkSelfPermission
 import androidx.fragment.app.Fragment
 import com.firebase.ui.database.FirebaseRecyclerOptions
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
@@ -86,12 +91,9 @@ class MapFragment : Fragment() {
     }
 
     private fun startLocationAware() {
-
-        fusedLocationProviderClient = LocationServices
-            .getFusedLocationProviderClient(requireContext())
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireContext())
 
         locationCallback = object: LocationCallback() {
-
             override fun onLocationResult(locationResult: LocationResult) {
                 super.onLocationResult(locationResult)
 
@@ -110,6 +112,30 @@ class MapFragment : Fragment() {
                 return format.format(date)
             }
         }
+    }
+
+    private fun checkPermission() =
+        checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PermissionChecker.PERMISSION_GRANTED &&
+                checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PermissionChecker.PERMISSION_GRANTED
+
+    @SuppressLint("MissingPermission")
+    private fun subscribeToLocationUpdates() {
+        if(checkPermission()) return
+        val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5).build()
+        fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
+    }
+    private fun unsubscribeToLocationUpdates() {
+        fusedLocationProviderClient.removeLocationUpdates(locationCallback)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        subscribeToLocationUpdates()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        unsubscribeToLocationUpdates()
     }
 
     override fun onDestroyView() {
