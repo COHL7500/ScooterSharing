@@ -20,8 +20,11 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.firebase.ui.database.FirebaseRecyclerOptions
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationResult
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
@@ -130,8 +133,18 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             || ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
         )
             return
+
         googleMap.isMyLocationEnabled = true
-        googleMap.mapType = GoogleMap.MAP_TYPE_HYBRID
+        googleMap.mapType = GoogleMap.MAP_TYPE_NORMAL
+
+        val itu = LatLng(55.6596, 12.5910)
+
+        googleMap.addMarker(MarkerOptions()
+            .position(itu)
+            .title("Marker in IT University of Copenhagen")
+        )
+
+        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(itu, 18f))
     }
 
     private fun Address.toAddressString() : String {
