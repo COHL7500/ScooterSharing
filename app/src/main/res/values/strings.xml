@@ -19,12 +19,15 @@
     <string name="accept">Accept</string>
     <string name="map">Map</string>
 
-
     <string-array name="scooter_names">
         <item>CPH001</item>
         <item>CPH002</item>
         <item>CPH003</item>
     </string-array>
+
+    <string name="google_maps_key" templateMergeStrategy="preserve" translatable="false">
+        AIzaSyCFSdHESaJJpyWssLSJuj_Lbeiny8-9OSw
+    </string>
 
     <plurals name="minutes_of_ride">
         <item quantity="one"> %d minute.</item>
@@ -40,6 +43,5 @@
     <string name="longitude_text">Longitude</string>
     <string name="time_text">Time</string>
     <string name="address_text">Address</string>
-
 
 </resources>
