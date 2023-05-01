@@ -50,6 +50,11 @@ class GeoHelper: Service() {
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        unsubscribeToLocationUpdates()
+    }
+
     private fun Address.toAddressString() : String {
         val address = this
         val stringBuilder = StringBuilder()
@@ -68,6 +73,16 @@ class GeoHelper: Service() {
         return geocoder.getFromLocation(latitude, longitude, 1)?.firstOrNull()?.toAddressString()
     }
 
+    fun setCallback(callMethod: (locationResult: LocationResult) -> Unit){
+        locationCallback = object : LocationCallback() {
+            override fun onLocationResult(locationResult: LocationResult) {
+                super.onLocationResult(locationResult)
+                callMethod(locationResult)
+            }
+        }
+        subscribeToLocationUpdates()
+    }
+
     private fun checkPermission() =
         PermissionChecker.checkSelfPermission(
             this,
@@ -78,23 +93,14 @@ class GeoHelper: Service() {
                     Manifest.permission.ACCESS_COARSE_LOCATION
                 ) != PermissionChecker.PERMISSION_GRANTED
 
-    fun setCallback(callMethod: (locationResult: LocationResult) -> Unit){
-        locationCallback = object : LocationCallback() {
-            override fun onLocationResult(locationResult: LocationResult) {
-                super.onLocationResult(locationResult)
-                callMethod(locationResult)
-            }
-        }
-    }
-
     @SuppressLint("MissingPermission")
-    fun subscribeToLocationUpdates() {
+    private fun subscribeToLocationUpdates() {
         if(checkPermission()) return
         val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5).build()
         fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
     }
 
-    fun unsubscribeToLocationUpdates() {
+    private fun unsubscribeToLocationUpdates() {
         fusedLocationProviderClient.removeLocationUpdates(locationCallback)
     }
 
@@ -102,7 +108,5 @@ class GeoHelper: Service() {
         fun getService(): GeoHelper = this@GeoHelper
     }
 
-    override fun onBind(intent: Intent): IBinder {
-        return GeoBinder()
-    }
+    override fun onBind(intent: Intent): IBinder = GeoBinder()
 }

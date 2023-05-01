@@ -18,12 +18,10 @@ abstract class GeoClass : Fragment() {
             geoHelper = binder.getService()
             geoBound = true
             geoHelper.setCallback(::startLocationAware)
-            geoHelper.subscribeToLocationUpdates()
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
             geoBound = false
-            geoHelper.unsubscribeToLocationUpdates()
         }
     }
 
