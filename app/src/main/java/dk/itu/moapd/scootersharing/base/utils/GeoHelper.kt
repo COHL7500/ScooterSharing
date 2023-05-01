@@ -22,10 +22,13 @@ package dk.itu.moapd.scootersharing.base.utils
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Service
 import android.content.Context
+import android.content.Intent
 import android.location.Address
 import android.location.Geocoder
 import android.os.Build
+import android.os.IBinder
 import android.os.Looper
 import androidx.core.content.PermissionChecker
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -36,9 +39,16 @@ import com.google.android.gms.location.Priority
 import com.google.android.material.textfield.TextInputLayout
 import java.util.Locale
 
-class GeoHelper(private val context: Context) {
-    var fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context)
+class GeoHelper: Service() {
+    lateinit var fusedLocationProviderClient: FusedLocationProviderClient
     lateinit var locationCallback: LocationCallback
+
+    override fun onBind(intent: Intent?): IBinder? = null
+
+    override fun onCreate() {
+        super.onCreate()
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
+    }
 
     private fun Address.toAddressString() : String {
         val address = this
@@ -54,17 +64,17 @@ class GeoHelper(private val context: Context) {
 
     @Suppress("DEPRECATION")
     fun getAddress(latitude: Double, longitude: Double) : String? {
-        val geocoder = Geocoder(context, Locale.getDefault())
+        val geocoder = Geocoder(this, Locale.getDefault())
         return geocoder.getFromLocation(latitude, longitude, 1)?.firstOrNull()?.toAddressString()
     }
 
     private fun checkPermission() =
         PermissionChecker.checkSelfPermission(
-            context,
+            this,
             Manifest.permission.ACCESS_FINE_LOCATION
         ) != PermissionChecker.PERMISSION_GRANTED &&
                 PermissionChecker.checkSelfPermission(
-                    context,
+                    this,
                     Manifest.permission.ACCESS_COARSE_LOCATION
                 ) != PermissionChecker.PERMISSION_GRANTED
 

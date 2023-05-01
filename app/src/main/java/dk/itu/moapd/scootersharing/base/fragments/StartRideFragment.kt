@@ -51,7 +51,7 @@ class StartRideFragment : Fragment() {
         super.onCreate(savedInstanceState)
         database = Firebase.database("https://moapd-2023-6e1fd-default-rtdb.europe-west1.firebasedatabase.app/").reference
         auth = FirebaseAuth.getInstance()
-        GeoHelper = GeoHelper(requireContext())
+        GeoHelper = GeoHelper()
 
         auth.currentUser?.let {
             val query = database.child("scooters")

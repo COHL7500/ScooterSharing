@@ -1,25 +1,13 @@
 package dk.itu.moapd.scootersharing.base.fragments
 
-import android.Manifest
-import android.annotation.SuppressLint
-import android.location.Address
-import android.location.Geocoder
-import android.os.Build
 import android.os.Bundle
-import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.content.PermissionChecker
-import androidx.core.content.PermissionChecker.checkSelfPermission
 import androidx.fragment.app.Fragment
 import com.firebase.ui.database.FirebaseRecyclerOptions
-import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.Priority
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
@@ -36,7 +24,6 @@ import java.util.*
 class MapFragment : Fragment() {
 
     private var _binding: FragmentMapBinding? = null
-    private lateinit var GeoHelper: GeoHelper
     private val binding
         get() = checkNotNull(_binding) {
 
@@ -49,6 +36,7 @@ class MapFragment : Fragment() {
     private lateinit var longitudeTextField: TextInputLayout
     private lateinit var timeTextField: TextInputLayout
     private lateinit var addressTextField: TextInputLayout
+    private lateinit var geoHelper: GeoHelper
 
     companion object {
         lateinit var adapter: CustomFirebaseAdapter
@@ -59,7 +47,6 @@ class MapFragment : Fragment() {
 
         database = Firebase.database("https://moapd-2023-6e1fd-default-rtdb.europe-west1.firebasedatabase.app/").reference
         auth = FirebaseAuth.getInstance()
-        GeoHelper = GeoHelper(requireContext())
 
         auth.currentUser?.let {
             val query = database.child("scooters")
@@ -78,10 +65,8 @@ class MapFragment : Fragment() {
                               container: ViewGroup?,
                               savedInstanceState: Bundle?
     ): View {
-
         _binding = FragmentMapBinding.inflate(inflater, container, false)
         return binding.root
-
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -92,11 +77,13 @@ class MapFragment : Fragment() {
         timeTextField = binding.contentMap.timeTextField
         addressTextField = binding.contentMap.addressTextField
 
+        geoHelper = GeoHelper()
+
         startLocationAware()
     }
 
     private fun startLocationAware() {
-        GeoHelper.locationCallback = object : LocationCallback() {
+        geoHelper.locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
                 super.onLocationResult(locationResult)
 
@@ -105,7 +92,7 @@ class MapFragment : Fragment() {
                         latitudeTextField.editText?.setText(location.latitude.toString())
                         longitudeTextField.editText?.setText(location.longitude.toString())
                         timeTextField.editText?.setText(location.time.toDateString())
-                        addressTextField.editText?.setText(GeoHelper.getAddress(location.latitude,location.longitude))
+                        addressTextField.editText?.setText(geoHelper.getAddress(location.latitude,location.longitude))
                     }
                 }
             }
@@ -120,13 +107,14 @@ class MapFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        GeoHelper.subscribeToLocationUpdates()
+        geoHelper.subscribeToLocationUpdates()
     }
 
     override fun onPause() {
         super.onPause()
-        GeoHelper.unsubscribeToLocationUpdates()
+        geoHelper.unsubscribeToLocationUpdates()
     }
+
 
     override fun onDestroyView() {
         super.onDestroyView()
