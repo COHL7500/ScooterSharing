@@ -1,9 +1,12 @@
 package dk.itu.moapd.scootersharing.base.fragments
 
+import android.Manifest
+import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.location.Address
 import android.location.Geocoder
 import android.location.Location
@@ -11,11 +14,14 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.firebase.ui.database.FirebaseRecyclerOptions
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationResult
+import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
@@ -28,7 +34,7 @@ import dk.itu.moapd.scootersharing.base.services.LocationService
 import java.text.SimpleDateFormat
 import java.util.*
 
-class MapFragment : Fragment() {
+class MapFragment : Fragment(), OnMapReadyCallback {
 
     private var _binding: FragmentMapBinding? = null
     private val binding
@@ -39,10 +45,6 @@ class MapFragment : Fragment() {
     private lateinit var database: DatabaseReference
     private lateinit var auth: FirebaseAuth
 
-    private lateinit var latitudeTextField: TextInputLayout
-    private lateinit var longitudeTextField: TextInputLayout
-    private lateinit var timeTextField: TextInputLayout
-    private lateinit var addressTextField: TextInputLayout
     private lateinit var locationService: LocationService
     private lateinit var broadcastManager: LocalBroadcastManager
     private lateinit var geoCoder: Geocoder
@@ -92,23 +94,13 @@ class MapFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        latitudeTextField = binding.contentMap.latitudeTextField
-        longitudeTextField = binding.contentMap.longitudeTextField
-        timeTextField = binding.contentMap.timeTextField
-        addressTextField = binding.contentMap.addressTextField
-
         locationService = LocationService()
     }
 
     private fun setAddress(latitude: Double, longitude: Double, time: Long) {
+        binding.contentMap.apply {
 
-            binding.contentMap.apply {
-                longitudeTextField.editText?.setText(longitude.toString())
-                latitudeTextField.editText?.setText(latitude.toString())
-                timeTextField.editText?.setText(time.toDateString())
-                addressTextField.editText?.setText(getAddress(latitude, longitude))
-            }
+        }
     }
 
     private fun Long.toDateString(): String {
@@ -131,6 +123,15 @@ class MapFragment : Fragment() {
 
         requireActivity().stopService(Intent(requireContext(), LocationService::class.java))
         broadcastManager.unregisterReceiver(locationReceiver)
+    }
+
+    override fun onMapReady(googleMap: GoogleMap){
+        if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+            || ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
+        )
+            return
+        googleMap.isMyLocationEnabled = true
+        googleMap.mapType = GoogleMap.MAP_TYPE_HYBRID
     }
 
     private fun Address.toAddressString() : String {
