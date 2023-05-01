@@ -13,7 +13,6 @@ import com.firebase.ui.database.FirebaseRecyclerOptions
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationResult
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ktx.database
@@ -23,13 +22,13 @@ import dk.itu.moapd.scootersharing.base.activities.MainActivity
 import dk.itu.moapd.scootersharing.base.adapters.CustomFirebaseAdapter
 import dk.itu.moapd.scootersharing.base.databinding.FragmentStartRideBinding
 import dk.itu.moapd.scootersharing.base.models.Scooter
-import dk.itu.moapd.scootersharing.base.utils.GeoHelper
+import dk.itu.moapd.scootersharing.base.services.LocationService
 import java.util.*
 
 class StartRideFragment : Fragment() {
 
     private var _binding: FragmentStartRideBinding? = null
-    private lateinit var GeoHelper: GeoHelper
+    private lateinit var LocationService: LocationService
     private val binding
         get() = checkNotNull(_binding) {
 
@@ -51,7 +50,7 @@ class StartRideFragment : Fragment() {
         super.onCreate(savedInstanceState)
         database = Firebase.database("https://moapd-2023-6e1fd-default-rtdb.europe-west1.firebasedatabase.app/").reference
         auth = FirebaseAuth.getInstance()
-        GeoHelper = GeoHelper()
+        LocationService = LocationService()
 
         auth.currentUser?.let {
             val query = database.child("scooters")
@@ -66,7 +65,7 @@ class StartRideFragment : Fragment() {
             adapter = CustomFirebaseAdapter(options)
         }
 
-        GeoHelper.locationCallback = object : LocationCallback() {
+        LocationService.locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
                 locationResult.lastLocation?.let { location ->
                     super.onLocationResult(locationResult)
@@ -139,12 +138,10 @@ class StartRideFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        GeoHelper.subscribeToLocationUpdates()
     }
 
     override fun onPause() {
         super.onPause()
-        GeoHelper.unsubscribeToLocationUpdates()
     }
 
     /**
