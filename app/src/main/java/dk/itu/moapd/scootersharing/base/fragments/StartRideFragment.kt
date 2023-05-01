@@ -32,7 +32,6 @@ import java.util.*
 class StartRideFragment : Fragment() {
 
     private var _binding: FragmentStartRideBinding? = null
-    private lateinit var locationService: LocationService
     private val binding
         get() = checkNotNull(_binding) {
 
@@ -55,7 +54,6 @@ class StartRideFragment : Fragment() {
         super.onCreate(savedInstanceState)
         database = Firebase.database("https://moapd-2023-6e1fd-default-rtdb.europe-west1.firebasedatabase.app/").reference
         auth = FirebaseAuth.getInstance()
-        locationService = LocationService()
         broadcastManager = LocalBroadcastManager.getInstance(requireContext())
 
         auth.currentUser?.let {
