@@ -25,9 +25,7 @@
         <item>CPH003</item>
     </string-array>
 
-    <string name="google_maps_key" templateMergeStrategy="preserve" translatable="false">
-        AIzaSyCFSdHESaJJpyWssLSJuj_Lbeiny8-9OSw
-    </string>
+    <string name="google_maps_key" templateMergeStrategy="preserve" translatable="false">AIzaSyC-O_J8z-LEpn9oxFJYTmySMZrDeQZtwzE</string>
 
     <plurals name="minutes_of_ride">
         <item quantity="one"> %d minute.</item>
