@@ -23,13 +23,13 @@ import dk.itu.moapd.scootersharing.base.activities.MainActivity
 import dk.itu.moapd.scootersharing.base.adapters.CustomFirebaseAdapter
 import dk.itu.moapd.scootersharing.base.databinding.FragmentStartRideBinding
 import dk.itu.moapd.scootersharing.base.models.Scooter
+import dk.itu.moapd.scootersharing.base.utils.GeoClass
 import dk.itu.moapd.scootersharing.base.utils.GeoHelper
 import java.util.*
 
-class StartRideFragment : Fragment() {
+class StartRideFragment : GeoClass() {
 
     private var _binding: FragmentStartRideBinding? = null
-    private lateinit var GeoHelper: GeoHelper
     private val binding
         get() = checkNotNull(_binding) {
 
@@ -51,7 +51,6 @@ class StartRideFragment : Fragment() {
         super.onCreate(savedInstanceState)
         database = Firebase.database("https://moapd-2023-6e1fd-default-rtdb.europe-west1.firebasedatabase.app/").reference
         auth = FirebaseAuth.getInstance()
-        GeoHelper = GeoHelper()
 
         auth.currentUser?.let {
             val query = database.child("scooters")
@@ -64,15 +63,6 @@ class StartRideFragment : Fragment() {
                 .build()
 
             adapter = CustomFirebaseAdapter(options)
-        }
-
-        GeoHelper.locationCallback = object : LocationCallback() {
-            override fun onLocationResult(locationResult: LocationResult) {
-                locationResult.lastLocation?.let { location ->
-                    super.onLocationResult(locationResult)
-                    coordLocation = Pair(location.latitude,location.longitude)
-                }
-            }
         }
     }
 
@@ -132,19 +122,15 @@ class StartRideFragment : Fragment() {
         }
     }
 
+    override fun startLocationAware(locationResult: LocationResult) {
+        locationResult.lastLocation?.let { location ->
+            coordLocation = Pair(location.latitude,location.longitude)
+        }
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-    }
-
-    override fun onResume() {
-        super.onResume()
-        GeoHelper.subscribeToLocationUpdates()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        GeoHelper.unsubscribeToLocationUpdates()
     }
 
     /**

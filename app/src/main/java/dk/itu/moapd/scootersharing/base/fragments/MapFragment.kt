@@ -17,11 +17,12 @@ import dk.itu.moapd.scootersharing.base.activities.*
 import dk.itu.moapd.scootersharing.base.adapters.CustomFirebaseAdapter
 import dk.itu.moapd.scootersharing.base.databinding.FragmentMapBinding
 import dk.itu.moapd.scootersharing.base.models.Scooter
+import dk.itu.moapd.scootersharing.base.utils.GeoClass
 import dk.itu.moapd.scootersharing.base.utils.GeoHelper
 import java.text.SimpleDateFormat
 import java.util.*
 
-class MapFragment : Fragment() {
+class MapFragment : GeoClass() {
 
     private var _binding: FragmentMapBinding? = null
     private val binding
@@ -36,7 +37,6 @@ class MapFragment : Fragment() {
     private lateinit var longitudeTextField: TextInputLayout
     private lateinit var timeTextField: TextInputLayout
     private lateinit var addressTextField: TextInputLayout
-    private lateinit var geoHelper: GeoHelper
 
     companion object {
         lateinit var adapter: CustomFirebaseAdapter
@@ -76,45 +76,26 @@ class MapFragment : Fragment() {
         longitudeTextField = binding.contentMap.longitudeTextField
         timeTextField = binding.contentMap.timeTextField
         addressTextField = binding.contentMap.addressTextField
-
-        geoHelper = GeoHelper()
-
-        startLocationAware()
     }
 
-    private fun startLocationAware() {
-        geoHelper.locationCallback = object : LocationCallback() {
-            override fun onLocationResult(locationResult: LocationResult) {
-                super.onLocationResult(locationResult)
-
-                binding.contentMap.apply {
-                    locationResult.lastLocation?.let { location ->
-                        latitudeTextField.editText?.setText(location.latitude.toString())
-                        longitudeTextField.editText?.setText(location.longitude.toString())
-                        timeTextField.editText?.setText(location.time.toDateString())
-                        addressTextField.editText?.setText(geoHelper.getAddress(location.latitude,location.longitude))
-                    }
+    override fun startLocationAware(locationResult: LocationResult) {
+        if(geoBound){
+            binding.contentMap.apply {
+                locationResult.lastLocation?.let { location ->
+                    latitudeTextField.editText?.setText(location.latitude.toString())
+                    longitudeTextField.editText?.setText(location.longitude.toString())
+                    timeTextField.editText?.setText(location.time.toDateString())
+                    addressTextField.editText?.setText(geoHelper.getAddress(location.latitude,location.longitude))
                 }
-            }
-
-            private fun Long.toDateString(): String {
-                val date = Date(this)
-                val format = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
-                return format.format(date)
             }
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        geoHelper.subscribeToLocationUpdates()
+    private fun Long.toDateString(): String {
+        val date = Date(this)
+        val format = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
+        return format.format(date)
     }
-
-    override fun onPause() {
-        super.onPause()
-        geoHelper.unsubscribeToLocationUpdates()
-    }
-
 
     override fun onDestroyView() {
         super.onDestroyView()

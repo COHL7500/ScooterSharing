@@ -27,6 +27,7 @@ import android.content.Context
 import android.content.Intent
 import android.location.Address
 import android.location.Geocoder
+import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 import android.os.Looper
@@ -34,6 +35,7 @@ import androidx.core.content.PermissionChecker
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.material.textfield.TextInputLayout
@@ -42,8 +44,6 @@ import java.util.Locale
 class GeoHelper: Service() {
     lateinit var fusedLocationProviderClient: FusedLocationProviderClient
     lateinit var locationCallback: LocationCallback
-
-    override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -78,6 +78,15 @@ class GeoHelper: Service() {
                     Manifest.permission.ACCESS_COARSE_LOCATION
                 ) != PermissionChecker.PERMISSION_GRANTED
 
+    fun setCallback(callMethod: (locationResult: LocationResult) -> Unit){
+        locationCallback = object : LocationCallback() {
+            override fun onLocationResult(locationResult: LocationResult) {
+                super.onLocationResult(locationResult)
+                callMethod(locationResult)
+            }
+        }
+    }
+
     @SuppressLint("MissingPermission")
     fun subscribeToLocationUpdates() {
         if(checkPermission()) return
@@ -87,5 +96,13 @@ class GeoHelper: Service() {
 
     fun unsubscribeToLocationUpdates() {
         fusedLocationProviderClient.removeLocationUpdates(locationCallback)
+    }
+
+    inner class GeoBinder : Binder() {
+        fun getService(): GeoHelper = this@GeoHelper
+    }
+
+    override fun onBind(intent: Intent): IBinder {
+        return GeoBinder()
     }
 }
