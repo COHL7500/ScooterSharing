@@ -137,13 +137,10 @@ class StartRideFragment : GeoClass() {
      * A message confirming the scooter location and name.
      */
     private fun showMessage() {
-
         val message = "Ride started using ${scooterName.text}."
-
         Toast.makeText(context, message,
             Toast.LENGTH_SHORT)
             .show()
-
     }
 
     private fun randomDate(): Long {
