@@ -1,6 +1,9 @@
 package dk.itu.moapd.scootersharing.base.fragments
 
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -9,11 +12,11 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.firebase.ui.database.FirebaseRecyclerOptions
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationResult
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ktx.database
@@ -23,13 +26,13 @@ import dk.itu.moapd.scootersharing.base.activities.MainActivity
 import dk.itu.moapd.scootersharing.base.adapters.CustomFirebaseAdapter
 import dk.itu.moapd.scootersharing.base.databinding.FragmentStartRideBinding
 import dk.itu.moapd.scootersharing.base.models.Scooter
-import dk.itu.moapd.scootersharing.base.utils.GeoHelper
+import dk.itu.moapd.scootersharing.base.services.LocationService
 import java.util.*
 
 class StartRideFragment : Fragment() {
 
     private var _binding: FragmentStartRideBinding? = null
-    private lateinit var GeoHelper: GeoHelper
+    private lateinit var locationService: LocationService
     private val binding
         get() = checkNotNull(_binding) {
 
@@ -39,6 +42,7 @@ class StartRideFragment : Fragment() {
     private lateinit var scooterLocation: EditText
     private lateinit var startRideButton: Button
     private lateinit var coordLocation: Pair<Double,Double>
+    private lateinit var broadcastManager: LocalBroadcastManager
 
     private lateinit var auth: FirebaseAuth
     private lateinit var database: DatabaseReference
@@ -51,7 +55,8 @@ class StartRideFragment : Fragment() {
         super.onCreate(savedInstanceState)
         database = Firebase.database("https://moapd-2023-6e1fd-default-rtdb.europe-west1.firebasedatabase.app/").reference
         auth = FirebaseAuth.getInstance()
-        GeoHelper = GeoHelper()
+        locationService = LocationService()
+        broadcastManager = LocalBroadcastManager.getInstance(requireContext())
 
         auth.currentUser?.let {
             val query = database.child("scooters")
@@ -66,13 +71,15 @@ class StartRideFragment : Fragment() {
             adapter = CustomFirebaseAdapter(options)
         }
 
-        GeoHelper.locationCallback = object : LocationCallback() {
-            override fun onLocationResult(locationResult: LocationResult) {
-                locationResult.lastLocation?.let { location ->
-                    super.onLocationResult(locationResult)
-                    coordLocation = Pair(location.latitude,location.longitude)
-                }
-            }
+
+    }
+
+    private val locationReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            val latitude = intent.getDoubleExtra("latitude", 0.0)
+            val longitude = intent.getDoubleExtra("longitude", 0.0)
+
+            coordLocation = Pair(latitude, longitude)
         }
     }
 
@@ -139,12 +146,18 @@ class StartRideFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        GeoHelper.subscribeToLocationUpdates()
+
+        requireActivity().startService(Intent(requireContext(), dk.itu.moapd.scootersharing.base.services.LocationService::class.java))
+
+        val filter = IntentFilter("location_result")
+        broadcastManager.registerReceiver(locationReceiver, filter)
     }
 
     override fun onPause() {
         super.onPause()
-        GeoHelper.unsubscribeToLocationUpdates()
+
+        requireActivity().stopService(Intent(requireContext(), dk.itu.moapd.scootersharing.base.services.LocationService::class.java))
+        broadcastManager.unregisterReceiver(locationReceiver)
     }
 
     /**
