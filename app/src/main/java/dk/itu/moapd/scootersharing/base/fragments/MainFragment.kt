@@ -23,11 +23,11 @@
 package dk.itu.moapd.scootersharing.base.fragments
 
 import android.Manifest
-import android.app.Activity.RESULT_OK
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
+import android.graphics.Bitmap
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -35,17 +35,16 @@ import android.widget.Button
 import android.widget.Toast
 import androidx.core.content.ContextCompat.checkSelfPermission
 import androidx.fragment.app.Fragment
-import com.firebase.ui.database.FirebaseRecyclerOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
 import dk.itu.moapd.scootersharing.base.activities.*
-import dk.itu.moapd.scootersharing.base.adapters.CustomFirebaseAdapter
 import dk.itu.moapd.scootersharing.base.contracts.CameraContract
 import dk.itu.moapd.scootersharing.base.databinding.FragmentMainBinding
-import dk.itu.moapd.scootersharing.base.models.Scooter
-import java.io.File
+import java.io.ByteArrayOutputStream
 
 /**
 Class for binding the view and instantiating Scooter.
@@ -64,41 +63,41 @@ class MainFragment : Fragment() {
     private lateinit var signOutButton: Button
     private lateinit var cameraButton: Button
     private lateinit var mapButton: Button
-    private lateinit var photoFile: File
-    private lateinit var photoUri: Uri
+    private lateinit var bucket: StorageReference
     private lateinit var auth: FirebaseAuth
 
     private lateinit var database: DatabaseReference
 
     companion object {
-        lateinit var adapter: CustomFirebaseAdapter
         private const val ALL_PERMISSIONS_RESULT = 1011
-        private const val REQUEST_IMAGE_CAPTURE = 1
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         auth = FirebaseAuth.getInstance()
         database = Firebase.database("https://moapd-2023-6e1fd-default-rtdb.europe-west1.firebasedatabase.app/").reference
-
-        auth.currentUser?.let {
-            val query = database.child("scooters")
-                .orderByChild("name")
-
-            val options = FirebaseRecyclerOptions.Builder<Scooter>()
-                .setQuery(query, Scooter::class.java)
-                .setLifecycleOwner(this)
-                .build()
-
-            adapter = CustomFirebaseAdapter(options)
-        }
+        bucket = FirebaseStorage.getInstance().reference
 
 
     }
 
-    private val takePicture = registerForActivityResult(CameraContract()) { uri ->
-        uri?.let {
-            println(uri)
+    private val uploadLastScooterPhoto = registerForActivityResult(CameraContract()) { bitmap ->
+        bitmap?.let {
+            Log.d("BITMAP_SUCCESS", bitmap.toString())
+
+            val lastPhotoRef = bucket.child("last_photo_scooters")
+
+            val baos = ByteArrayOutputStream()
+
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos)
+
+            val data = baos.toByteArray()
+
+            val uploadTask = lastPhotoRef.child("last-photo.jpg").putBytes(data)
+
+            uploadTask.addOnSuccessListener {
+                Log.d("FirebaseBucket", "Image uploaded successfully")
+            }
         }
     }
 
@@ -159,24 +158,15 @@ class MainFragment : Fragment() {
 
         cameraButton.setOnClickListener {
 
-            takePicture.launch(Unit)
-            //val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-            //startActivityForResult(intent, REQUEST_IMAGE_CAPTURE)
+            uploadLastScooterPhoto.launch(Unit)
 
         }
 
         requestUserPermissions()
     }
 
-    /*
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-            val imageUri = photoUri
-            println(imageUri)
-        }
-    }
 
-     */
+
 
 
     private fun permissionsToRequest(permissions: ArrayList<String>): ArrayList<String> {
