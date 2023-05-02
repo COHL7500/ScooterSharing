@@ -32,8 +32,8 @@ data class Scooter(val name: String? = "",
                    var startLatitude: Double? = 0.0,
                    var startLongitude: Double? = 0.0,
                    var timestamp: Long? = System.currentTimeMillis(),
-                   val img: Uri? = Uri.parse("catsquish.jpg"),
-                   val last_photo: Uri? = Uri.parse("catsquish.jpg")) {
+                   val img: String? = "catsquish.jpg",
+                   val last_photo: String? = "catsquish.jpg") {
     override fun toString(): String {
         return "Scooter(name=$name, location=($startLatitude,$startLongitude), timestamp=$timestamp)"
     }
