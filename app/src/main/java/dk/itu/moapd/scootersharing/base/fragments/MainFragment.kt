@@ -23,8 +23,10 @@
 package dk.itu.moapd.scootersharing.base.fragments
 
 import android.Manifest
+import android.app.Activity.RESULT_OK
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -40,8 +42,10 @@ import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 import dk.itu.moapd.scootersharing.base.activities.*
 import dk.itu.moapd.scootersharing.base.adapters.CustomFirebaseAdapter
+import dk.itu.moapd.scootersharing.base.contracts.CameraContract
 import dk.itu.moapd.scootersharing.base.databinding.FragmentMainBinding
 import dk.itu.moapd.scootersharing.base.models.Scooter
+import java.io.File
 
 /**
 Class for binding the view and instantiating Scooter.
@@ -58,15 +62,18 @@ class MainFragment : Fragment() {
     private lateinit var updateRideButton: Button
     private lateinit var listRidesButton: Button
     private lateinit var signOutButton: Button
+    private lateinit var cameraButton: Button
     private lateinit var mapButton: Button
+    private lateinit var photoFile: File
+    private lateinit var photoUri: Uri
     private lateinit var auth: FirebaseAuth
 
     private lateinit var database: DatabaseReference
 
-
     companion object {
         lateinit var adapter: CustomFirebaseAdapter
         private const val ALL_PERMISSIONS_RESULT = 1011
+        private const val REQUEST_IMAGE_CAPTURE = 1
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -89,6 +96,12 @@ class MainFragment : Fragment() {
 
     }
 
+    private val takePicture = registerForActivityResult(CameraContract()) { uri ->
+        uri?.let {
+            println(uri)
+        }
+    }
+
     override fun onCreateView(inflater: LayoutInflater,
                               container: ViewGroup?,
                               savedInstanceState: Bundle?
@@ -107,6 +120,7 @@ class MainFragment : Fragment() {
         listRidesButton = binding.listRidesButton
         signOutButton = binding.signOutButton
         mapButton = binding.mapButton
+        cameraButton = binding.cameraButton
 
         /**
          * Sets name and location of scooter, then clears the text fields.
@@ -143,8 +157,24 @@ class MainFragment : Fragment() {
             startActivity(intent)
         }
 
+        cameraButton.setOnClickListener {
+
+            takePicture.launch(Unit)
+            //val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+            //startActivityForResult(intent, REQUEST_IMAGE_CAPTURE)
+
+        }
+
         requestUserPermissions()
     }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+            val imageUri = photoUri
+            println(imageUri)
+        }
+    }
+
 
     private fun permissionsToRequest(permissions: ArrayList<String>): ArrayList<String> {
 
@@ -161,6 +191,7 @@ class MainFragment : Fragment() {
         val permissions: ArrayList<String> = ArrayList()
         permissions.add(Manifest.permission.ACCESS_FINE_LOCATION)
         permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION)
+        permissions.add(Manifest.permission.CAMERA)
 
         val permissionsToRequest = permissionsToRequest(permissions)
 
