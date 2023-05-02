@@ -15,6 +15,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -28,6 +29,10 @@ import dk.itu.moapd.scootersharing.base.R
 import dk.itu.moapd.scootersharing.base.databinding.FragmentMapBinding
 import dk.itu.moapd.scootersharing.base.models.Scooter
 import dk.itu.moapd.scootersharing.base.services.LocationService
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -44,6 +49,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     private lateinit var locationService: LocationService
     private lateinit var broadcastManager: LocalBroadcastManager
     private lateinit var geoCoder: Geocoder
+    private lateinit var scooters: List<Scooter>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,6 +57,16 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         database = FirebaseDatabase.getInstance().reference
         broadcastManager = LocalBroadcastManager.getInstance(requireContext())
         geoCoder = Geocoder(requireContext(), Locale.getDefault())
+
+        database.child("scooters").get().addOnCompleteListener {
+            if (it.isSuccessful) {
+                scooters = it.result.children.mapNotNull { doc ->
+                    doc.getValue(Scooter::class.java)
+                }
+            } else {
+                Log.d("MAP_SCOOTER_ERROR", it.exception?.message.toString())
+            }
+        }
     }
 
     private val locationReceiver = object : BroadcastReceiver() {
@@ -108,41 +124,39 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         requireActivity().stopService(Intent(requireContext(), LocationService::class.java))
         broadcastManager.unregisterReceiver(locationReceiver)
     }
-
     override fun onMapReady(googleMap: GoogleMap){
         if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
             || ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
         )
             return
 
+        googleMap.isMyLocationEnabled = true
+        googleMap.mapType = GoogleMap.MAP_TYPE_HYBRID
 
-        database.child("scooters").get().addOnCompleteListener {
-            if (it.isSuccessful) {
-                val scooters = it.result.children.mapNotNull { doc ->
-                    doc.getValue(Scooter::class.java)
+        // Runs a coroutine on the IO thread, thus preventing blocking the UI (main) thread.
+        // This is necessary as onMapReady runs asynchronously.
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            scooters.forEach { scooter ->
+                val markerOptions = MarkerOptions().position(LatLng(scooter.startLatitude!!, scooter.startLongitude!!)).title(scooter.name)
+                withContext(Dispatchers.Main) {
+                    googleMap.addMarker(markerOptions)
                 }
-
-                scooters.forEach { scooter ->
-                    Log.d("SCOOTER_PRINT", "${scooter.startLongitude} : ${scooter.startLatitude}")
-                }
-
-            } else {
-                Log.d("MAP_SCOOTER_ERROR", it.exception?.message.toString())
             }
         }
 
 
-        googleMap.isMyLocationEnabled = true
-        googleMap.mapType = GoogleMap.MAP_TYPE_HYBRID
 
-        val scooter1 = LatLng(55.6596, 12.5910)
+        val itu = LatLng(55.6596, 12.5910)
 
         googleMap.addMarker(MarkerOptions()
-            .position(scooter1)
-            .title("Scooter 1")
+            .position(itu)
+            .title("ITU")
         )
 
-        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(scooter1, 18f))
+
+
+        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(itu, 7f))
     }
 
     private fun Address.toAddressString() : String {
