@@ -1,7 +1,6 @@
 package dk.itu.moapd.scootersharing.base.fragments
 
 import android.Manifest
-import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -9,30 +8,23 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.location.Address
 import android.location.Geocoder
-import android.location.Location
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import com.firebase.ui.database.FirebaseRecyclerOptions
-import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationResult
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
-import com.google.android.material.textfield.TextInputLayout
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.ktx.database
-import com.google.firebase.ktx.Firebase
+import com.google.firebase.database.FirebaseDatabase
 import dk.itu.moapd.scootersharing.base.R
-import dk.itu.moapd.scootersharing.base.adapters.CustomFirebaseAdapter
 import dk.itu.moapd.scootersharing.base.databinding.FragmentMapBinding
 import dk.itu.moapd.scootersharing.base.models.Scooter
 import dk.itu.moapd.scootersharing.base.services.LocationService
@@ -48,35 +40,17 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         }
 
     private lateinit var database: DatabaseReference
-    private lateinit var auth: FirebaseAuth
 
     private lateinit var locationService: LocationService
     private lateinit var broadcastManager: LocalBroadcastManager
     private lateinit var geoCoder: Geocoder
 
-    companion object {
-        lateinit var adapter: CustomFirebaseAdapter
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        database = Firebase.database("https://moapd-2023-6e1fd-default-rtdb.europe-west1.firebasedatabase.app/").reference
+        database = FirebaseDatabase.getInstance().reference
         broadcastManager = LocalBroadcastManager.getInstance(requireContext())
         geoCoder = Geocoder(requireContext(), Locale.getDefault())
-        auth = FirebaseAuth.getInstance()
-
-        auth.currentUser?.let {
-            val query = database.child("scooters")
-                .orderByChild("name")
-
-            val options = FirebaseRecyclerOptions.Builder<Scooter>()
-                .setQuery(query, Scooter::class.java)
-                .setLifecycleOwner(this)
-                .build()
-
-            adapter = CustomFirebaseAdapter(options)
-        }
     }
 
     private val locationReceiver = object : BroadcastReceiver() {
@@ -141,17 +115,34 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         )
             return
 
+
+        database.child("scooters").get().addOnCompleteListener {
+            if (it.isSuccessful) {
+                val scooters = it.result.children.mapNotNull { doc ->
+                    doc.getValue(Scooter::class.java)
+                }
+
+                scooters.forEach { scooter ->
+                    Log.d("SCOOTER_PRINT", "${scooter.startLongitude} : ${scooter.startLatitude}")
+                }
+
+            } else {
+                Log.d("MAP_SCOOTER_ERROR", it.exception?.message.toString())
+            }
+        }
+
+
         googleMap.isMyLocationEnabled = true
         googleMap.mapType = GoogleMap.MAP_TYPE_HYBRID
 
-        val itu = LatLng(55.6596, 12.5910)
+        val scooter1 = LatLng(55.6596, 12.5910)
 
         googleMap.addMarker(MarkerOptions()
-            .position(itu)
-            .title("Marker in IT University of Copenhagen")
+            .position(scooter1)
+            .title("Scooter 1")
         )
 
-        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(itu, 18f))
+        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(scooter1, 18f))
     }
 
     private fun Address.toAddressString() : String {

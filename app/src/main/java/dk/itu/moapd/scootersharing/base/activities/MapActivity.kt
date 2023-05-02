@@ -26,8 +26,6 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import dk.itu.moapd.scootersharing.base.R
 import dk.itu.moapd.scootersharing.base.databinding.ActivityMapBinding
-import dk.itu.moapd.scootersharing.base.fragments.StartRideFragment
-import dk.itu.moapd.scootersharing.base.databinding.ActivityStartRideBinding
 import dk.itu.moapd.scootersharing.base.fragments.MapFragment
 
 /**
