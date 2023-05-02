@@ -38,10 +38,7 @@
             android:name=".activities.LoginActivity"
             android:exported="false" />
         <activity
-            android:name=".activities.UpdateRideActivity"
-            android:exported="false" />
-        <activity
-            android:name=".activities.CreateRideActivity"
+            android:name=".activities.StartRideActivity"
             android:exported="false" />
         <activity
             android:name=".activities.MainActivity"
