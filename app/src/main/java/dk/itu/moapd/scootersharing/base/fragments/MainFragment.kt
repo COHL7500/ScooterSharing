@@ -41,6 +41,10 @@ import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
+import com.google.mlkit.vision.barcode.BarcodeScannerOptions
+import com.google.mlkit.vision.barcode.BarcodeScanning
+import com.google.mlkit.vision.barcode.common.Barcode
+import com.google.mlkit.vision.common.InputImage
 import dk.itu.moapd.scootersharing.base.activities.*
 import dk.itu.moapd.scootersharing.base.contracts.CameraContract
 import dk.itu.moapd.scootersharing.base.databinding.FragmentMainBinding
@@ -62,6 +66,7 @@ class MainFragment : Fragment() {
     private lateinit var listRidesButton: Button
     private lateinit var signOutButton: Button
     private lateinit var cameraButton: Button
+    private lateinit var qrscanButton: Button
     private lateinit var mapButton: Button
     private lateinit var bucket: StorageReference
     private lateinit var auth: FirebaseAuth
@@ -101,6 +106,22 @@ class MainFragment : Fragment() {
         }
     }
 
+    private val scanQRCodePhoto = registerForActivityResult(CameraContract()) { bitmap ->
+        bitmap?.let {
+            val scanner = BarcodeScanning.getClient(BarcodeScannerOptions.Builder()
+                .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
+                .build())
+            scanner.process(InputImage.fromBitmap(bitmap, 0))
+                .addOnSuccessListener { barcodes ->
+                    for (barcode in barcodes) {
+                        Log.d("QR_SCANNED_SUCCESS",barcode.rawValue.toString())
+                    }
+                }.addOnFailureListener {
+                    Log.d("QR_SCANNED_FAILURE","")
+                }
+        }
+    }
+
     override fun onCreateView(inflater: LayoutInflater,
                               container: ViewGroup?,
                               savedInstanceState: Bundle?
@@ -115,22 +136,17 @@ class MainFragment : Fragment() {
 
 
         startRideButton = binding.startRideButton
-        updateRideButton = binding.updateRideButton
         listRidesButton = binding.listRidesButton
         signOutButton = binding.signOutButton
         mapButton = binding.mapButton
         cameraButton = binding.cameraButton
+        qrscanButton = binding.qrscanButton
 
         /**
          * Sets name and location of scooter, then clears the text fields.
          */
         startRideButton.setOnClickListener {
             val intent = Intent(activity, StartRideActivity::class.java)
-            startActivity(intent)
-        }
-
-        updateRideButton.setOnClickListener {
-            val intent = Intent(activity, UpdateRideActivity::class.java)
             startActivity(intent)
         }
 
@@ -157,9 +173,11 @@ class MainFragment : Fragment() {
         }
 
         cameraButton.setOnClickListener {
-
             uploadLastScooterPhoto.launch(Unit)
+        }
 
+        qrscanButton.setOnClickListener {
+            scanQRCodePhoto.launch(Unit)
         }
 
         requestUserPermissions()
