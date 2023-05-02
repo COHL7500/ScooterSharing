@@ -35,15 +35,19 @@ import android.widget.Button
 import android.widget.Toast
 import androidx.core.content.ContextCompat.checkSelfPermission
 import androidx.fragment.app.Fragment
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
+import dk.itu.moapd.scootersharing.base.R
 import dk.itu.moapd.scootersharing.base.activities.*
 import dk.itu.moapd.scootersharing.base.contracts.CameraContract
 import dk.itu.moapd.scootersharing.base.databinding.FragmentMainBinding
+import dk.itu.moapd.scootersharing.base.models.Scooter
 import java.io.ByteArrayOutputStream
 
 /**
@@ -63,6 +67,7 @@ class MainFragment : Fragment() {
     private lateinit var signOutButton: Button
     private lateinit var cameraButton: Button
     private lateinit var mapButton: Button
+    private lateinit var createRideButton: Button
     private lateinit var bucket: StorageReference
     private lateinit var auth: FirebaseAuth
 
@@ -75,7 +80,7 @@ class MainFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         auth = FirebaseAuth.getInstance()
-        database = Firebase.database("https://moapd-2023-6e1fd-default-rtdb.europe-west1.firebasedatabase.app/").reference
+        database = FirebaseDatabase.getInstance().reference
         bucket = FirebaseStorage.getInstance().reference
 
 
@@ -120,12 +125,21 @@ class MainFragment : Fragment() {
         signOutButton = binding.signOutButton
         mapButton = binding.mapButton
         cameraButton = binding.cameraButton
+        createRideButton = binding.createRideButton
 
-        /**
-         * Sets name and location of scooter, then clears the text fields.
-         */
         startRideButton.setOnClickListener {
-            val intent = Intent(activity, StartRideActivity::class.java)
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle(getString(R.string.alert_title_startRide))
+                .setMessage(getString(R.string.alert_supporting_text_startRide))
+                .setNegativeButton(getString(R.string.decline)) { _, _ -> }
+                .setPositiveButton(getString(R.string.accept)) { _, _ ->
+                    // Rent the most recent ride in the database.
+                    // .. Or the ride closest to the user.
+                }.show()
+        }
+
+        createRideButton.setOnClickListener {
+            val intent = Intent(activity, CreateRideActivity::class.java)
             startActivity(intent)
         }
 

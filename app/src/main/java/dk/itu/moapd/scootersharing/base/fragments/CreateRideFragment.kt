@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.net.Uri
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -15,8 +14,6 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.firebase.ui.database.FirebaseRecyclerOptions
-import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationResult
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
@@ -27,11 +24,9 @@ import dk.itu.moapd.scootersharing.base.activities.MainActivity
 import dk.itu.moapd.scootersharing.base.adapters.CustomFirebaseAdapter
 import dk.itu.moapd.scootersharing.base.databinding.FragmentStartRideBinding
 import dk.itu.moapd.scootersharing.base.models.Scooter
-import dk.itu.moapd.scootersharing.base.services.LocationService
-import java.net.URL
 import java.util.*
 
-class StartRideFragment : Fragment() {
+class CreateRideFragment : Fragment() {
 
     private var _binding: FragmentStartRideBinding? = null
     private val binding

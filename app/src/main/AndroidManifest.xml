@@ -41,7 +41,7 @@
             android:name=".activities.UpdateRideActivity"
             android:exported="false" />
         <activity
-            android:name=".activities.StartRideActivity"
+            android:name=".activities.CreateRideActivity"
             android:exported="false" />
         <activity
             android:name=".activities.MainActivity"

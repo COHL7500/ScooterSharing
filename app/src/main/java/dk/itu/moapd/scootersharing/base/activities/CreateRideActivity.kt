@@ -25,13 +25,13 @@ package dk.itu.moapd.scootersharing.base.activities
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import dk.itu.moapd.scootersharing.base.R
-import dk.itu.moapd.scootersharing.base.fragments.StartRideFragment
+import dk.itu.moapd.scootersharing.base.fragments.CreateRideFragment
 import dk.itu.moapd.scootersharing.base.databinding.ActivityStartRideBinding
 
 /**
 Class for binding the view and instantiating Scooter.
  */
-class StartRideActivity : AppCompatActivity() {
+class CreateRideActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityStartRideBinding
 
@@ -39,7 +39,7 @@ class StartRideActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityStartRideBinding.inflate(layoutInflater)
 
-        val urFragment = StartRideFragment()
+        val urFragment = CreateRideFragment()
         val view = binding.root
 
         setContentView(view)
