@@ -168,12 +168,15 @@ class MainFragment : Fragment() {
         requestUserPermissions()
     }
 
+    /*
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             val imageUri = photoUri
             println(imageUri)
         }
     }
+
+     */
 
 
     private fun permissionsToRequest(permissions: ArrayList<String>): ArrayList<String> {
