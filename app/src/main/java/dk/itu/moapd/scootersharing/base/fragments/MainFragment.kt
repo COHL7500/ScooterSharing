@@ -146,7 +146,7 @@ class MainFragment : Fragment() {
          * Sets name and location of scooter, then clears the text fields.
          */
         startRideButton.setOnClickListener {
-            val intent = Intent(activity, StartRideActivity::class.java)
+            val intent = Intent(activity, CreateRideActivity::class.java)
             startActivity(intent)
         }
 
