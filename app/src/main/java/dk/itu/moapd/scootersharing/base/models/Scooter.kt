@@ -22,12 +22,18 @@
 
 package dk.itu.moapd.scootersharing.base.models
 
+import android.net.Uri
+
 /**
  * Representing the Scooter name entity.
  * Consists of the name of the scooter and scooter location.
  */
-data class Scooter(val name: String? = "", var startLatitude: Double? = 0.0, var startLongitude: Double? = 0.0, var timestamp: Long? = System.currentTimeMillis(),
-val imgURL: String? = "catsquish.jpg") {
+data class Scooter(val name: String? = "",
+                   var startLatitude: Double? = 0.0,
+                   var startLongitude: Double? = 0.0,
+                   var timestamp: Long? = System.currentTimeMillis(),
+                   val img: Uri? = Uri.parse("catsquish.jpg"),
+                   val last_photo: Uri? = Uri.parse("catsquish.jpg")) {
     override fun toString(): String {
         return "Scooter(name=$name, location=($startLatitude,$startLongitude), timestamp=$timestamp)"
     }

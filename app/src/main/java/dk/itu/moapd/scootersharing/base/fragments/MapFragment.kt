@@ -23,6 +23,7 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
+import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.material.textfield.TextInputLayout
@@ -30,6 +31,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
+import dk.itu.moapd.scootersharing.base.R
 import dk.itu.moapd.scootersharing.base.adapters.CustomFirebaseAdapter
 import dk.itu.moapd.scootersharing.base.databinding.FragmentMapBinding
 import dk.itu.moapd.scootersharing.base.models.Scooter
@@ -92,6 +94,11 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                               savedInstanceState: Bundle?
     ): View {
         _binding = FragmentMapBinding.inflate(inflater, container, false)
+
+        val fragment = childFragmentManager.findFragmentById(R.id.google_maps) as SupportMapFragment?
+        fragment?.getMapAsync(this)
+
+
         return binding.root
     }
 
@@ -135,7 +142,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             return
 
         googleMap.isMyLocationEnabled = true
-        googleMap.mapType = GoogleMap.MAP_TYPE_NORMAL
+        googleMap.mapType = GoogleMap.MAP_TYPE_HYBRID
 
         val itu = LatLng(55.6596, 12.5910)
 

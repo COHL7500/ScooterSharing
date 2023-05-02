@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.net.Uri
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -27,6 +28,7 @@ import dk.itu.moapd.scootersharing.base.adapters.CustomFirebaseAdapter
 import dk.itu.moapd.scootersharing.base.databinding.FragmentStartRideBinding
 import dk.itu.moapd.scootersharing.base.models.Scooter
 import dk.itu.moapd.scootersharing.base.services.LocationService
+import java.net.URL
 import java.util.*
 
 class StartRideFragment : Fragment() {
@@ -109,7 +111,7 @@ class StartRideFragment : Fragment() {
 
                         if (name.isNotEmpty()) {
                             val timestamp = randomDate()
-                            val scooter = Scooter(name, coordLocation.first, coordLocation.second, timestamp, "scooter_thumbnail.png")
+                            val scooter = Scooter(name, coordLocation.first, coordLocation.second, timestamp, Uri.parse("scooter_thumbnail.png"))
 
                             auth.currentUser?.let { user ->
                                 val uid = database.child("scooters").push().key

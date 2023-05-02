@@ -1,4 +1,5 @@
 package dk.itu.moapd.scootersharing.base.adapters
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
@@ -27,13 +28,14 @@ class CustomFirebaseAdapter(options: FirebaseRecyclerOptions<Scooter>)
         }
 
     class ViewHolder(private val binding: ListRidesBinding) : RecyclerView.ViewHolder(binding.root) {
+        @SuppressLint("SetTextI18n")
         fun bind(scooter: Scooter) {
             binding.scooterName.text = scooter.name
             binding.scooterLocation.text = scooter.startLatitude.toString() + ", " + scooter.startLongitude.toString()
             binding.scooterTimestamp.text = scooter.timestamp.toString()
 
             val storage = Firebase.storage("gs://moapd-2023-6e1fd.appspot.com").reference
-            val imageRef = scooter.imgURL?.let { storage.child(it) }
+            val imageRef = scooter.img?.let { storage.child(it.toString()) }
 
             imageRef?.downloadUrl?.addOnSuccessListener {
                 Glide.with(itemView.context)
