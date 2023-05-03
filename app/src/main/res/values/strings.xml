@@ -45,9 +45,9 @@
     <string name="longitude_text">Longitude</string>
     <string name="time_text">Time</string>
     <string name="address_text">Address</string>
-    <string name="camera_button">Take Picture</string>
+    <string name="camera_button">Stop Ride</string>
     <string name="qrscan_button">Scan QR-Code</string>
     <string name="create_ride_button">Create Ride</string>
-    <string name="rented_ride_button">Rented Ride</string>
+    <string name="rented_ride_button">Rent Ride</string>
 
 </resources>
