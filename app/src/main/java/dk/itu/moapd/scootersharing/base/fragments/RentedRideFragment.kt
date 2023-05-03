@@ -6,40 +6,37 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.location.Address
 import android.location.Geocoder
-import android.location.Location
 import android.os.Bundle
-import android.util.DisplayMetrics
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.lifecycleScope
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.*
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import dk.itu.moapd.scootersharing.base.R
-import dk.itu.moapd.scootersharing.base.databinding.FragmentMapBinding
-import dk.itu.moapd.scootersharing.base.models.Scooter
+import dk.itu.moapd.scootersharing.base.activities.MainActivity
+import dk.itu.moapd.scootersharing.base.databinding.FragmentRentedRideBinding
 import dk.itu.moapd.scootersharing.base.services.LocationService
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.*
 
 class RentedRideFragment : Fragment(), OnMapReadyCallback {
 
-    private var _binding: FragmentMapBinding? = null
+    private var _binding: FragmentRentedRideBinding? = null
     private val binding
         get() = checkNotNull(_binding) {
 
@@ -54,6 +51,8 @@ class RentedRideFragment : Fragment(), OnMapReadyCallback {
     private var latestLatitude: Double = 56.0
     private var latestTime: Long = 0
     private lateinit var googleMap: GoogleMap
+    private lateinit var endRideButton: Button
+    private lateinit var userMarker: Marker
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -69,6 +68,8 @@ class RentedRideFragment : Fragment(), OnMapReadyCallback {
             latestTime = intent.getLongExtra("time", 0)
 
             googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(latestLatitude, latestLongitude), 15f))
+
+            userMarker.position = LatLng(latestLatitude, latestLongitude)
         }
     }
 
@@ -76,16 +77,12 @@ class RentedRideFragment : Fragment(), OnMapReadyCallback {
                               container: ViewGroup?,
                               savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentMapBinding.inflate(inflater, container, false)
+        _binding = FragmentRentedRideBinding.inflate(inflater, container, false)
 
         val fragment = childFragmentManager.findFragmentById(R.id.google_maps) as SupportMapFragment?
         fragment?.getMapAsync(this)
 
-        val displayMetrics = DisplayMetrics()
-
-        requireActivity().windowManager.defaultDisplay.getMetrics(displayMetrics)
-
-        binding.contentMap.googleMaps.layoutParams.height = (displayMetrics.heightPixels / 1.75).toInt()
+        endRideButton = binding.endRideButton
 
         return binding.root
     }
@@ -93,12 +90,34 @@ class RentedRideFragment : Fragment(), OnMapReadyCallback {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         locationService = LocationService()
+
+        endRideButton.setOnClickListener {
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("End Ride")
+                .setMessage("Are you sure you want to end the ride?")
+                .setNegativeButton(getString(R.string.decline)) { _, _ -> }
+                .setPositiveButton(getString(R.string.accept)) { _, _ ->
+
+                    val intent = Intent(activity, MainActivity::class.java)
+                    startActivity(intent)
+                }.show()
+        }
     }
 
     private fun Long.toDateString(): String {
         val date = Date(this)
         val format = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
         return format.format(date)
+    }
+
+    private fun bitMapFromVector(vectorResID:Int): BitmapDescriptor {
+        val vectorDrawable= ContextCompat.getDrawable(requireContext(),vectorResID)
+        vectorDrawable!!.setBounds(0,0, vectorDrawable.intrinsicWidth,vectorDrawable.intrinsicHeight)
+        val bitmap=
+            Bitmap.createBitmap(vectorDrawable.intrinsicWidth,vectorDrawable.intrinsicHeight,Bitmap.Config.ARGB_8888)
+        val canvas= Canvas(bitmap)
+        vectorDrawable.draw(canvas)
+        return BitmapDescriptorFactory.fromBitmap(bitmap)
     }
 
     override fun onResume() {
@@ -125,10 +144,17 @@ class RentedRideFragment : Fragment(), OnMapReadyCallback {
 
         this.googleMap = googleMap
 
-        googleMap.isMyLocationEnabled = true
         googleMap.mapType = GoogleMap.MAP_TYPE_HYBRID
 
         val itu = LatLng(55.6596, 12.5910)
+
+        googleMap.uiSettings.isScrollGesturesEnabled = false
+        googleMap.uiSettings.isMyLocationButtonEnabled = false
+
+        userMarker = googleMap.addMarker(MarkerOptions()
+            .position(itu)
+            .icon(bitMapFromVector(R.drawable.scooter_marker_icon_32))
+        )!!
 
         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(itu, 15f))
     }

@@ -158,7 +158,7 @@ class MainFragment : Fragment() {
          */
 
         startRideButton.setOnClickListener {
-            Toast.makeText(activity, "Take a picture of Scooter's QR Code!",
+            Toast.makeText(activity, "Take a picture of Scooter's QR Code.",
                 Toast.LENGTH_SHORT)
                 .show()
 

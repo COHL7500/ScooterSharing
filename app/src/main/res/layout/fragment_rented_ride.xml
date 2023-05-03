@@ -1,21 +1,133 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/fragment_start_ride_layout"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/fragment_rented_ride_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center"
     android:orientation="vertical"
-    tools:context=".fragments.MapFragment">
-    
+    android:weightSum="2"
+    tools:context=".fragments.RentedRideFragment">
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="0.4">
+        android:layout_weight="2"
+        android:layout_gravity="top">
 
         <include
             android:id="@+id/content_map"
             layout="@layout/content_map" />
 
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/title_rented_textview"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:paddingStart="15dp"
+            android:paddingEnd="15dp"
+            android:paddingTop="7dp"
+            android:paddingBottom="10dp"
+            android:textStyle="bold"
+            android:text="@string/title_rented_text"
+            android:textAlignment="textStart"
+            android:textColor="@color/black"
+            android:textSize="24sp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@color/gray">
+
+        <TextView
+            android:id="@+id/name_rented_textview"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:paddingStart="15dp"
+            android:paddingEnd="15dp"
+            android:paddingTop="7dp"
+            android:paddingBottom="7dp"
+            android:text="Scooter 5"
+            android:textAlignment="textStart"
+            android:textColor="@color/black"
+            android:textSize="18sp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@color/gray">
+
+        <TextView
+            android:id="@+id/distance_rented_text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:paddingStart="15dp"
+            android:paddingEnd="15dp"
+            android:paddingTop="7dp"
+            android:paddingBottom="7dp"
+            android:text="25.2km"
+            android:textAlignment="textStart"
+            android:textColor="@color/black"
+            android:textSize="18sp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@color/gray">
+
+        <TextView
+            android:id="@+id/time_rented_textview"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:paddingStart="15dp"
+            android:paddingEnd="15dp"
+            android:paddingTop="7dp"
+            android:paddingBottom="7dp"
+            android:text="0:01:23"
+            android:textAlignment="textStart"
+            android:textColor="@color/black"
+            android:textSize="18sp" />
+
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="7dp"
+        android:paddingTop="15dp"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/end_ride_button"
+            app:cornerRadius="300dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@color/purple_500"
+            android:layout_margin="5dp"
+            android:text="@string/end_ride_button"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            android:textSize="30sp" />
     </LinearLayout>
 </LinearLayout>

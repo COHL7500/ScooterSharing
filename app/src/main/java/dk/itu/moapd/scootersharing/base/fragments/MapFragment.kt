@@ -6,6 +6,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.location.Address
 import android.location.Geocoder
 import android.os.Bundle
@@ -14,6 +16,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
@@ -21,6 +24,8 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.BitmapDescriptor
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.firebase.database.DatabaseReference
@@ -111,6 +116,18 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         requireActivity().stopService(Intent(requireContext(), LocationService::class.java))
         broadcastManager.unregisterReceiver(locationReceiver)
     }
+
+    private fun bitMapFromVector(vectorResID:Int): BitmapDescriptor {
+        val vectorDrawable= ContextCompat.getDrawable(requireContext(),vectorResID)
+        vectorDrawable!!.setBounds(0,0, vectorDrawable.intrinsicWidth,vectorDrawable.intrinsicHeight)
+        val bitmap=
+            Bitmap.createBitmap(vectorDrawable.intrinsicWidth,vectorDrawable.intrinsicHeight,
+                Bitmap.Config.ARGB_8888)
+        val canvas= Canvas(bitmap)
+        vectorDrawable.draw(canvas)
+        return BitmapDescriptorFactory.fromBitmap(bitmap)
+    }
+
     override fun onMapReady(googleMap: GoogleMap){
         if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
             || ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
@@ -138,6 +155,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                             val scooterMarker = MarkerOptions()
                                 .position(LatLng(scooter.startLatitude!!, scooter.startLongitude!!))
                                 .title(scooter.name)
+                                .icon(bitMapFromVector(R.drawable.scooter_marker_noarrow_icon_32))
                             googleMap.addMarker(scooterMarker)
                         }
                     }
@@ -148,11 +166,6 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         }
 
         val itu = LatLng(55.6596, 12.5910)
-
-        googleMap.addMarker(MarkerOptions()
-            .position(itu)
-            .title("ITU")
-        )?.showInfoWindow()
 
         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(itu, 13f))
     }
