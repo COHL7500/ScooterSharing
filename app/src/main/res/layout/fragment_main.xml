@@ -38,11 +38,29 @@
             android:layout_width="170dp"
             android:layout_height="wrap_content"
             android:background="@color/purple_500"
-            android:drawableStart="@drawable/baseline_start_24"
-            android:drawableTint="#FFFFFF"
-            android:paddingStart="10dp"
-            android:paddingEnd="20dp"
+            android:drawableLeft="@drawable/baseline_start_24"
+            android:drawableTint="@color/white"
             android:text="@string/start_ride_button"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/create_ride_button"
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:background="@color/purple_500"
+            android:drawableTint="#FFFFFF"
+            android:text="@string/create_ride_button"
             android:textAllCaps="false"
             android:textColor="@color/white"
             android:textSize="16sp" />
@@ -62,8 +80,6 @@
             android:background="@color/purple_500"
             android:drawableStart="@drawable/baseline_list_24"
             android:drawableTint="#FFFFFF"
-            android:paddingStart="10dp"
-            android:paddingEnd="20dp"
             android:text="@string/list_rides_button"
             android:textAllCaps="false"
             android:textColor="@color/white"
@@ -84,8 +100,6 @@
             android:background="@color/purple_500"
             android:drawableStart="@drawable/baseline_map_24"
             android:drawableTint="#FFFFFF"
-            android:paddingStart="10dp"
-            android:paddingEnd="20dp"
             android:text="@string/map"
             android:textAllCaps="false"
             android:textColor="@color/white"
@@ -106,8 +120,6 @@
             android:background="@color/purple_500"
             android:drawableStart="@drawable/baseline_list_24"
             android:drawableTint="#FFFFFF"
-            android:paddingStart="10dp"
-            android:paddingEnd="20dp"
             android:text="@string/camera_button"
             android:textAllCaps="false"
             android:textColor="@color/white"
@@ -122,15 +134,13 @@
         android:orientation="horizontal">
 
         <Button
-            android:id="@+id/qrscan_button"
+            android:id="@+id/rented_ride_button"
             android:layout_width="150dp"
             android:layout_height="wrap_content"
             android:background="@color/purple_500"
             android:drawableStart="@drawable/baseline_list_24"
             android:drawableTint="#FFFFFF"
-            android:paddingStart="10dp"
-            android:paddingEnd="20dp"
-            android:text="@string/qrscan_button"
+            android:text="@string/rented_ride_button"
             android:textAllCaps="false"
             android:textColor="@color/white"
             android:textSize="16sp" />
@@ -150,8 +160,6 @@
             android:background="@color/purple_500"
             android:drawableStart="@drawable/logout_icon_24"
             android:drawableTint="#FFFFFF"
-            android:paddingStart="10dp"
-            android:paddingEnd="20dp"
             android:text="@string/sign_out_button"
             android:textAllCaps="false"
             android:textColor="@color/white"

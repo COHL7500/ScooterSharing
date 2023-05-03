@@ -37,6 +37,7 @@ import androidx.core.content.ContextCompat.checkSelfPermission
 import androidx.fragment.app.Fragment
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
@@ -61,12 +62,12 @@ class MainFragment : Fragment() {
 
         }
 
+    private lateinit var createRideButton: Button
     private lateinit var startRideButton: Button
-    private lateinit var updateRideButton: Button
     private lateinit var listRidesButton: Button
     private lateinit var signOutButton: Button
+    private lateinit var rentedRideButton: Button
     private lateinit var cameraButton: Button
-    private lateinit var qrscanButton: Button
     private lateinit var mapButton: Button
     private lateinit var bucket: StorageReference
     private lateinit var auth: FirebaseAuth
@@ -80,13 +81,13 @@ class MainFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         auth = FirebaseAuth.getInstance()
-        database = Firebase.database("https://moapd-2023-6e1fd-default-rtdb.europe-west1.firebasedatabase.app/").reference
+        database = FirebaseDatabase.getInstance().reference
         bucket = FirebaseStorage.getInstance().reference
 
 
     }
 
-    private val uploadLastScooterPhoto = registerForActivityResult(CameraContract()) { bitmap ->
+    private val takeLastPhoto = registerForActivityResult(CameraContract()) { bitmap ->
         bitmap?.let {
             Log.d("BITMAP_SUCCESS", bitmap.toString())
 
@@ -101,7 +102,11 @@ class MainFragment : Fragment() {
             val uploadTask = lastPhotoRef.child("last-photo.jpg").putBytes(data)
 
             uploadTask.addOnSuccessListener {
-                Log.d("FirebaseBucket", "Image uploaded successfully")
+                Log.i("FIREBASE_BUCKET", "Image uploaded successfully")
+            }
+
+            uploadTask.addOnFailureListener {
+                Log.e("FIREBASE_BUCKET", "Could not upload image")
             }
         }
     }
@@ -114,7 +119,7 @@ class MainFragment : Fragment() {
             scanner.process(InputImage.fromBitmap(bitmap, 0))
                 .addOnSuccessListener { barcodes ->
                     for (barcode in barcodes) {
-                        Log.d("QR_SCANNED_SUCCESS",barcode.rawValue.toString())
+                        Log.d("QR_SCANNED_SUCCESS", barcode.rawValue.toString())
                     }
                 }.addOnFailureListener {
                     Log.d("QR_SCANNED_FAILURE","")
@@ -135,17 +140,32 @@ class MainFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
 
-        startRideButton = binding.startRideButton
+        createRideButton = binding.createRideButton
         listRidesButton = binding.listRidesButton
+        startRideButton = binding.startRideButton
+        rentedRideButton = binding.rentedRideButton
         signOutButton = binding.signOutButton
         mapButton = binding.mapButton
         cameraButton = binding.cameraButton
-        qrscanButton = binding.qrscanButton
 
-        /**
-         * Sets name and location of scooter, then clears the text fields.
+
+        /** Start Ride
+         * Start camera intent
+         * scan QR code
+         * ask user if they want to rent the particular ride
+         * if accept, change "isRented" variable to true and start the ride.
+         * When "End Ride", take last_photo picture and update location based on your current position.
          */
+
         startRideButton.setOnClickListener {
+            Toast.makeText(activity, "Take a picture of Scooter's QR Code!",
+                Toast.LENGTH_SHORT)
+                .show()
+
+            scanQRCodePhoto.launch(Unit)
+        }
+
+        createRideButton.setOnClickListener {
             val intent = Intent(activity, CreateRideActivity::class.java)
             startActivity(intent)
         }
@@ -173,11 +193,12 @@ class MainFragment : Fragment() {
         }
 
         cameraButton.setOnClickListener {
-            uploadLastScooterPhoto.launch(Unit)
+            takeLastPhoto.launch(Unit)
         }
 
-        qrscanButton.setOnClickListener {
-            scanQRCodePhoto.launch(Unit)
+        rentedRideButton.setOnClickListener {
+            val intent = Intent(activity, RentedRideActivity::class.java)
+            startActivity(intent)
         }
 
         requestUserPermissions()

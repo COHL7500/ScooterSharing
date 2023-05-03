@@ -8,7 +8,9 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.location.Address
 import android.location.Geocoder
+import android.location.Location
 import android.os.Bundle
+import android.util.DisplayMetrics
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -35,7 +37,7 @@ import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.*
 
-class MapFragment : Fragment(), OnMapReadyCallback {
+class RentedRideFragment : Fragment(), OnMapReadyCallback {
 
     private var _binding: FragmentMapBinding? = null
     private val binding
@@ -44,13 +46,17 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         }
 
     private lateinit var database: DatabaseReference
+
     private lateinit var locationService: LocationService
     private lateinit var broadcastManager: LocalBroadcastManager
     private lateinit var geoCoder: Geocoder
+    private var latestLongitude: Double = 55.0
+    private var latestLatitude: Double = 56.0
+    private var latestTime: Long = 0
+    private lateinit var googleMap: GoogleMap
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         database = FirebaseDatabase.getInstance().reference
         broadcastManager = LocalBroadcastManager.getInstance(requireContext())
         geoCoder = Geocoder(requireContext(), Locale.getDefault())
@@ -58,11 +64,11 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
     private val locationReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            val latitude = intent.getDoubleExtra("latitude", 0.0)
-            val longitude = intent.getDoubleExtra("longitude", 0.0)
-            val time = intent.getLongExtra("time", 0)
+            latestLatitude = intent.getDoubleExtra("latitude", 0.0)
+            latestLongitude = intent.getDoubleExtra("longitude", 0.0)
+            latestTime = intent.getLongExtra("time", 0)
 
-            setAddress(latitude, longitude, time)
+            googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(latestLatitude, latestLongitude), 15f))
         }
     }
 
@@ -75,6 +81,11 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         val fragment = childFragmentManager.findFragmentById(R.id.google_maps) as SupportMapFragment?
         fragment?.getMapAsync(this)
 
+        val displayMetrics = DisplayMetrics()
+
+        requireActivity().windowManager.defaultDisplay.getMetrics(displayMetrics)
+
+        binding.contentMap.googleMaps.layoutParams.height = (displayMetrics.heightPixels / 1.75).toInt()
 
         return binding.root
     }
@@ -82,12 +93,6 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         locationService = LocationService()
-    }
-
-    private fun setAddress(latitude: Double, longitude: Double, time: Long) {
-        binding.contentMap.apply {
-
-        }
     }
 
     private fun Long.toDateString(): String {
@@ -111,52 +116,22 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         requireActivity().stopService(Intent(requireContext(), LocationService::class.java))
         broadcastManager.unregisterReceiver(locationReceiver)
     }
+
     override fun onMapReady(googleMap: GoogleMap){
         if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
             || ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
         )
             return
 
+        this.googleMap = googleMap
+
         googleMap.isMyLocationEnabled = true
         googleMap.mapType = GoogleMap.MAP_TYPE_HYBRID
 
-        // Runs a coroutine on the IO thread, thus preventing blocking the UI (main) thread.
-        // This is necessary as onMapReady runs asynchronously.
-
-        lifecycleScope.launch(Dispatchers.IO) {
-            var scooterList: List<Scooter>
-
-            database.child("scooters").get().addOnCompleteListener {
-                if (it.isSuccessful) {
-                    scooterList = it.result.children.mapNotNull { doc ->
-                        doc.getValue(Scooter::class.java)
-                    }
-
-                    // Use a coroutine to add the markers asynchronously
-                    lifecycleScope.launch(Dispatchers.Main) {
-                        scooterList.forEach { scooter ->
-                            val scooterMarker = MarkerOptions()
-                                .position(LatLng(scooter.startLatitude!!, scooter.startLongitude!!))
-                                .title(scooter.name)
-                            googleMap.addMarker(scooterMarker)
-                        }
-                    }
-                } else {
-                    Log.d("MAP_SCOOTER_ERROR", it.exception?.message.toString())
-                }
-            }
-        }
-
         val itu = LatLng(55.6596, 12.5910)
 
-        googleMap.addMarker(MarkerOptions()
-            .position(itu)
-            .title("ITU")
-        )?.showInfoWindow()
-
-        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(itu, 13f))
+        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(itu, 15f))
     }
-
 
     private fun Address.toAddressString() : String {
         val address = this
