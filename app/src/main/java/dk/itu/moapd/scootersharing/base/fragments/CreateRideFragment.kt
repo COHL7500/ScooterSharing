@@ -23,13 +23,13 @@ import com.google.firebase.ktx.Firebase
 import dk.itu.moapd.scootersharing.base.R
 import dk.itu.moapd.scootersharing.base.activities.MainActivity
 import dk.itu.moapd.scootersharing.base.adapters.CustomFirebaseAdapter
-import dk.itu.moapd.scootersharing.base.databinding.FragmentStartRideBinding
+import dk.itu.moapd.scootersharing.base.databinding.FragmentCreateRideBinding
 import dk.itu.moapd.scootersharing.base.models.Scooter
 import java.util.*
 
 class CreateRideFragment : Fragment() {
 
-    private var _binding: FragmentStartRideBinding? = null
+    private var _binding: FragmentCreateRideBinding? = null
     private val binding
         get() = checkNotNull(_binding) {
 
@@ -85,7 +85,7 @@ class CreateRideFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
 
-        _binding = FragmentStartRideBinding.inflate(inflater, container, false)
+        _binding = FragmentCreateRideBinding.inflate(inflater, container, false)
         return binding.root
     }
 
@@ -93,11 +93,10 @@ class CreateRideFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         scooterName = binding.editTextName
-        scooterLocation = binding.editTextLocation
         startRideButton = binding.startRideButton
 
         startRideButton.setOnClickListener {
-            if (scooterName.text.isNotEmpty() && scooterLocation.text.isNotEmpty()) {
+            if (scooterName.text.isNotEmpty()) {
                 MaterialAlertDialogBuilder(requireContext())
                     .setTitle(getString(R.string.alert_title_startRide))
                     .setMessage(getString(R.string.alert_supporting_text_startRide))
@@ -120,7 +119,6 @@ class CreateRideFragment : Fragment() {
                         showMessage()
 
                         scooterName.text.clear()
-                        scooterLocation.text.clear()
 
                         val intent = Intent(activity, MainActivity::class.java)
                         startActivity(intent)
@@ -128,7 +126,7 @@ class CreateRideFragment : Fragment() {
                     }.show()
             } else {
 
-                Toast.makeText(context, "Please fill out both fields.",
+                Toast.makeText(context, "Please fill out the field!",
                 Toast.LENGTH_SHORT)
                     .show()
             }

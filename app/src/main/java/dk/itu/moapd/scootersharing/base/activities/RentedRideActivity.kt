@@ -25,18 +25,21 @@ package dk.itu.moapd.scootersharing.base.activities
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import dk.itu.moapd.scootersharing.base.R
-import dk.itu.moapd.scootersharing.base.databinding.ActivityCameraBinding
-import dk.itu.moapd.scootersharing.base.fragments.ListRidesFragment
+import dk.itu.moapd.scootersharing.base.databinding.ActivityRentedRideBinding
+import dk.itu.moapd.scootersharing.base.fragments.RentedRideFragment
 
-class CameraActivity : AppCompatActivity() {
+/**
+Class for binding the view and instantiating Scooter.
+ */
+class RentedRideActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivityCameraBinding
+    private lateinit var binding: ActivityRentedRideBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityCameraBinding.inflate(layoutInflater)
+        binding = ActivityRentedRideBinding.inflate(layoutInflater)
 
-        val urFragment = ListRidesFragment()
+        val urFragment = RentedRideFragment()
         val view = binding.root
 
         setContentView(view)

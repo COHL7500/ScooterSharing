@@ -63,11 +63,15 @@ class MapFragment : GeoClass(), OnMapReadyCallback {
         }
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(inflater: LayoutInflater,
+                              container: ViewGroup?,
+                              savedInstanceState: Bundle?
+    ): View {
         _binding = FragmentMapBinding.inflate(inflater, container, false)
 
         val fragment = childFragmentManager.findFragmentById(R.id.google_maps) as SupportMapFragment?
         fragment?.getMapAsync(this)
+
 
         return binding.root
     }
@@ -85,24 +89,42 @@ class MapFragment : GeoClass(), OnMapReadyCallback {
         // This is necessary as onMapReady runs asynchronously.
 
         lifecycleScope.launch(Dispatchers.IO) {
-            scooters.forEach { scooter ->
-                val markerOptions = MarkerOptions().position(LatLng(scooter.startLatitude!!, scooter.startLongitude!!)).title(scooter.name)
-                withContext(Dispatchers.Main) {
-                    googleMap.addMarker(markerOptions)
+            var scooterList: List<Scooter>
+
+            database.child("scooters").get().addOnCompleteListener {
+                if (it.isSuccessful) {
+                    scooterList = it.result.children.mapNotNull { doc ->
+                        doc.getValue(Scooter::class.java)
+                    }
+
+                    // Use a coroutine to add the markers asynchronously
+                    lifecycleScope.launch(Dispatchers.Main) {
+                        scooterList.forEach { scooter ->
+                            val scooterMarker = MarkerOptions()
+                                .position(LatLng(scooter.startLatitude!!, scooter.startLongitude!!))
+                                .title(scooter.name)
+                            googleMap.addMarker(scooterMarker)
+                        }
+                    }
+                } else {
+                    Log.d("MAP_SCOOTER_ERROR", it.exception?.message.toString())
                 }
             }
         }
+
+
 
         val itu = LatLng(55.6596, 12.5910)
 
         googleMap.addMarker(MarkerOptions()
             .position(itu)
             .title("ITU")
-        )
-
-        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(itu, 7f))
+        )?.showInfoWindow()
+        
+        
+        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(itu, 13f))
     }
-
+    
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null

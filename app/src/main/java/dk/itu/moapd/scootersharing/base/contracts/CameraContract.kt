@@ -19,7 +19,7 @@ class CameraContract : ActivityResultContract<Unit, Bitmap?>() {
         return if (resultCode == Activity.RESULT_OK) {
             return intent?.extras?.get("data") as Bitmap
         } else {
-            Log.d("UriIsNull", "What the fuck man!!!!")
+            Log.e("CAMERA_PARSE_NULL", "CameraContract parsed null")
             null
         }
     }

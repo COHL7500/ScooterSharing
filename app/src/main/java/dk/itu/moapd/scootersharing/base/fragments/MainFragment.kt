@@ -23,13 +23,9 @@
 package dk.itu.moapd.scootersharing.base.fragments
 
 import android.Manifest
-import android.content.BroadcastReceiver
-import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.location.Geocoder
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -37,17 +33,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.Toast
-import androidx.activity.result.launch
 import androidx.core.content.ContextCompat.checkSelfPermission
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.setFragmentResult
-import androidx.lifecycle.MutableLiveData
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
@@ -56,30 +45,24 @@ import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
-import dk.itu.moapd.scootersharing.base.R
 import dk.itu.moapd.scootersharing.base.activities.*
 import dk.itu.moapd.scootersharing.base.contracts.CameraContract
 import dk.itu.moapd.scootersharing.base.databinding.FragmentMainBinding
-import dk.itu.moapd.scootersharing.base.models.Scooter
-import dk.itu.moapd.scootersharing.base.services.LocationService
-import dk.itu.moapd.scootersharing.base.utils.GeoClass
 import java.io.ByteArrayOutputStream
-import java.util.Locale
 
 /**
 Class for binding the view and instantiating Scooter.
  */
-class MainFragment : GeoClass() {
+class MainFragment : Fragment() {
 
     private var _binding: FragmentMainBinding? = null
-    private var latitude: Double = 0.0
-    private var longitude: Double = 0.0
     private val binding
         get() = checkNotNull(_binding) {
 
         }
 
     private lateinit var startRideButton: Button
+    private lateinit var updateRideButton: Button
     private lateinit var listRidesButton: Button
     private lateinit var signOutButton: Button
     private lateinit var cameraButton: Button
@@ -87,6 +70,7 @@ class MainFragment : GeoClass() {
     private lateinit var mapButton: Button
     private lateinit var bucket: StorageReference
     private lateinit var auth: FirebaseAuth
+
     private lateinit var database: DatabaseReference
 
     companion object {
@@ -98,6 +82,8 @@ class MainFragment : GeoClass() {
         auth = FirebaseAuth.getInstance()
         database = Firebase.database("https://moapd-2023-6e1fd-default-rtdb.europe-west1.firebasedatabase.app/").reference
         bucket = FirebaseStorage.getInstance().reference
+
+
     }
 
     private val uploadLastScooterPhoto = registerForActivityResult(CameraContract()) { bitmap ->
@@ -105,15 +91,21 @@ class MainFragment : GeoClass() {
             Log.d("BITMAP_SUCCESS", bitmap.toString())
 
             val lastPhotoRef = bucket.child("last_photo_scooters")
+
             val baos = ByteArrayOutputStream()
 
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos)
 
             val data = baos.toByteArray()
+
             val uploadTask = lastPhotoRef.child("last-photo.jpg").putBytes(data)
 
             uploadTask.addOnSuccessListener {
                 Log.d("FirebaseBucket", "Image uploaded successfully")
+            }
+
+            uploadTask.addOnFailureListener {
+                Log.e("FIREBASE_BUCKET", "Could not upload image")
             }
         }
     }
@@ -125,55 +117,27 @@ class MainFragment : GeoClass() {
                 .build())
             scanner.process(InputImage.fromBitmap(bitmap, 0))
                 .addOnSuccessListener { barcodes ->
-                    val qrCodeVal = barcodes.first().rawValue.toString()
-                    Log.d("QR_SCANNED_SUCCESS",qrCodeVal)
-                    startRideButtonClicked(qrCodeVal)
+                    for (barcode in barcodes) {
+                        Log.d("QR_SCANNED_SUCCESS",barcode.rawValue.toString())
+                    }
                 }.addOnFailureListener {
                     Log.d("QR_SCANNED_FAILURE","")
                 }
         }
     }
 
-    private fun startRideButtonClicked(scooterId: String) {
-        database.child("scooters").child(scooterId).get().addOnSuccessListener {
-            if(it.child("isRented").value == false){
-                MaterialAlertDialogBuilder(requireContext())
-                    .setTitle(getString(R.string.alert_title_startRide))
-                    .setMessage(getString(R.string.alert_supporting_text_startRide))
-                    .setNegativeButton(getString(R.string.decline)) { _, _ -> }
-                    .setPositiveButton(getString(R.string.accept)) { _, _ ->
-                        auth.currentUser?.let { _ ->
-                            database.child("scooters").child(scooterId).let {
-                                it.child("isRented").setValue(true)
-                                it.child("timestamp").setValue(System.currentTimeMillis())
-                                it.child("startLatitude").setValue(latitude)
-                                it.child("startLongitude").setValue(longitude)
-                            }
-                        }
-                    }.show()
-            } else {
-                MaterialAlertDialogBuilder(requireContext())
-                    .setTitle(R.string.alert_title_scooterAlreadyRented)
-                    .setMessage(R.string.alert_title_scooterAlreadyRented)
-                    .setPositiveButton(getString(R.string.accept)) { _, _ -> }
-                    .show()
-            }
-        }.addOnFailureListener {
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle(R.string.alert_title_scooterNotFound)
-                .setMessage(R.string.alert_title_scooterNotFound)
-                .setPositiveButton(getString(R.string.accept)) { _, _ -> }
-                .show()
-        }
-    }
+    override fun onCreateView(inflater: LayoutInflater,
+                              container: ViewGroup?,
+                              savedInstanceState: Bundle?
+    ): View {
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentMainBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
 
         startRideButton = binding.startRideButton
         listRidesButton = binding.listRidesButton
@@ -182,12 +146,19 @@ class MainFragment : GeoClass() {
         cameraButton = binding.cameraButton
         qrscanButton = binding.qrscanButton
 
+        /**
+         * Sets name and location of scooter, then clears the text fields.
+         */
         startRideButton.setOnClickListener {
-            val intent = Intent(activity, CreateRideActivity::class.java)
-            startActivity(intent)
+            Toast.makeText(activity, "Take a picture of Scooter's QR Code!",
+                Toast.LENGTH_SHORT)
+                .show()
+
+            scanQRCodePhoto.launch(Unit)
         }
 
         listRidesButton.setOnClickListener {
+
             val intent = Intent(activity, ListRidesActivity::class.java)
             startActivity(intent)
         }
@@ -218,6 +189,10 @@ class MainFragment : GeoClass() {
 
         requestUserPermissions()
     }
+
+
+
+
 
     private fun permissionsToRequest(permissions: ArrayList<String>): ArrayList<String> {
 
