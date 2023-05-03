@@ -35,6 +35,7 @@ import android.widget.Button
 import android.widget.Toast
 import androidx.core.content.ContextCompat.checkSelfPermission
 import androidx.fragment.app.Fragment
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ktx.database
@@ -45,15 +46,18 @@ import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
+import dk.itu.moapd.scootersharing.base.R
 import dk.itu.moapd.scootersharing.base.activities.*
 import dk.itu.moapd.scootersharing.base.contracts.CameraContract
 import dk.itu.moapd.scootersharing.base.databinding.FragmentMainBinding
+import dk.itu.moapd.scootersharing.base.models.Scooter
+import dk.itu.moapd.scootersharing.base.utils.GeoClass
 import java.io.ByteArrayOutputStream
 
 /**
 Class for binding the view and instantiating Scooter.
  */
-class MainFragment : Fragment() {
+class MainFragment : GeoClass() {
 
     private var _binding: FragmentMainBinding? = null
     private val binding
@@ -62,15 +66,13 @@ class MainFragment : Fragment() {
         }
 
     private lateinit var startRideButton: Button
-    private lateinit var updateRideButton: Button
     private lateinit var listRidesButton: Button
     private lateinit var signOutButton: Button
     private lateinit var cameraButton: Button
-    private lateinit var qrscanButton: Button
+    private lateinit var rentedRideButton: Button
     private lateinit var mapButton: Button
     private lateinit var bucket: StorageReference
     private lateinit var auth: FirebaseAuth
-
     private lateinit var database: DatabaseReference
 
     companion object {
@@ -82,8 +84,6 @@ class MainFragment : Fragment() {
         auth = FirebaseAuth.getInstance()
         database = Firebase.database("https://moapd-2023-6e1fd-default-rtdb.europe-west1.firebasedatabase.app/").reference
         bucket = FirebaseStorage.getInstance().reference
-
-
     }
 
     private val uploadLastScooterPhoto = registerForActivityResult(CameraContract()) { bitmap ->
@@ -117,12 +117,41 @@ class MainFragment : Fragment() {
                 .build())
             scanner.process(InputImage.fromBitmap(bitmap, 0))
                 .addOnSuccessListener { barcodes ->
-                    for (barcode in barcodes) {
-                        Log.d("QR_SCANNED_SUCCESS",barcode.rawValue.toString())
-                    }
+                    startScooterRide(barcodes.first().rawValue.toString())
+                    Log.d("QR_SCANNED_SUCCESS",barcodes.first().rawValue.toString())
                 }.addOnFailureListener {
                     Log.d("QR_SCANNED_FAILURE","")
                 }
+        }
+    }
+
+    private fun startScooterRide(scooterId: String){
+        val scooter = database.child("scooters").child(scooterId)
+        scooter.get().addOnSuccessListener {
+            if(it.child("isRented").value == false){
+                MaterialAlertDialogBuilder(requireContext())
+                    .setTitle(getString(R.string.alert_title_startRide))
+                    .setMessage(getString(R.string.alert_supporting_text_startRide))
+                    .setNegativeButton(getString(R.string.decline)) { _, _ -> }
+                    .setPositiveButton(getString(R.string.accept)) { _, _ ->
+                        scooter.child("isRented").setValue(true)
+                        scooter.child("startLatitude").setValue(coordinates.first)
+                        scooter.child("startLongitude").setValue(coordinates.second)
+                        scooter.child("timestamp").setValue(System.currentTimeMillis())
+                    }.show()
+            } else {
+                MaterialAlertDialogBuilder(requireContext())
+                    .setTitle("Scooter already rented!")
+                    .setMessage("This scooter is already rented by someone else!")
+                    .setPositiveButton("Okay") { _, _ -> }
+                    .show()
+            }
+        }.addOnFailureListener {
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Scooter not found!")
+                .setMessage("A scooter with that ID was not found!")
+                .setPositiveButton("Okay") { _, _ -> }
+                .show()
         }
     }
 
@@ -138,13 +167,12 @@ class MainFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-
         startRideButton = binding.startRideButton
         listRidesButton = binding.listRidesButton
         signOutButton = binding.signOutButton
         mapButton = binding.mapButton
         cameraButton = binding.cameraButton
-        qrscanButton = binding.qrscanButton
+        rentedRideButton = binding.rentedRideButton
 
         /**
          * Sets name and location of scooter, then clears the text fields.
@@ -183,16 +211,12 @@ class MainFragment : Fragment() {
             uploadLastScooterPhoto.launch(Unit)
         }
 
-        qrscanButton.setOnClickListener {
+        rentedRideButton.setOnClickListener {
             scanQRCodePhoto.launch(Unit)
         }
 
         requestUserPermissions()
     }
-
-
-
-
 
     private fun permissionsToRequest(permissions: ArrayList<String>): ArrayList<String> {
 
