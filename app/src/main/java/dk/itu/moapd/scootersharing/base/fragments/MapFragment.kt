@@ -79,6 +79,17 @@ class MapFragment : GeoClass(), OnMapReadyCallback {
         return binding.root
     }
 
+    private fun bitMapFromVector(vectorResID:Int): BitmapDescriptor {
+        val vectorDrawable= ContextCompat.getDrawable(requireContext(),vectorResID)
+        vectorDrawable!!.setBounds(0,0, vectorDrawable.intrinsicWidth,vectorDrawable.intrinsicHeight)
+        val bitmap=
+            Bitmap.createBitmap(vectorDrawable.intrinsicWidth,vectorDrawable.intrinsicHeight,Bitmap.Config.ARGB_8888)
+        val canvas= Canvas(bitmap)
+        vectorDrawable.draw(canvas)
+        return BitmapDescriptorFactory.fromBitmap(bitmap)
+    }
+
+
     override fun onMapReady(googleMap: GoogleMap){
         if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
             || ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
@@ -117,11 +128,6 @@ class MapFragment : GeoClass(), OnMapReadyCallback {
         }
 
         val itu = LatLng(55.6596, 12.5910)
-
-        googleMap.addMarker(MarkerOptions()
-            .position(itu)
-            .title("ITU")
-        )?.showInfoWindow()
 
         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(itu, 13f))
     }

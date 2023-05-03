@@ -27,12 +27,15 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.os.Bundle
+import android.provider.Settings.Global.getString
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.Toast
+import androidx.core.app.ActivityCompat.requestPermissions
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.content.ContextCompat.checkSelfPermission
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseAuth
@@ -60,16 +63,6 @@ class MainFragment : GeoClass() {
     private var _binding: FragmentMainBinding? = null
     private val binding get() = checkNotNull(_binding) {}
 
-        }
-
-    private lateinit var createRideButton: Button
-    private lateinit var startRideButton: Button
-    private lateinit var listRidesButton: Button
-    private lateinit var signOutButton: Button
-    private lateinit var rentedRideButton: Button
-    private lateinit var cameraButton: Button
-    private lateinit var rentedRideButton: Button
-    private lateinit var mapButton: Button
     private lateinit var bucket: StorageReference
     private lateinit var auth: FirebaseAuth
 
@@ -224,7 +217,8 @@ class MainFragment : GeoClass() {
         }
 
         binding.rentedRideButton.setOnClickListener {
-            scanQRCodePhoto.launch(Unit)
+            val intent = Intent(activity, RentedRideActivity::class.java)
+            startActivity(intent)
         }
 
         requestUserPermissions()

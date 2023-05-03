@@ -49,5 +49,7 @@
     <string name="qrscan_button">Scan QR-Code</string>
     <string name="create_ride_button">Create Ride</string>
     <string name="rented_ride_button">Rent Ride</string>
+    <string name="title_rented_text">Your Current Ride</string>
+    <string name="end_ride_button">End Ride</string>
 
 </resources>
