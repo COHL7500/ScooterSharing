@@ -34,11 +34,12 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.Toast
 import androidx.core.content.ContextCompat.checkSelfPermission
-import androidx.fragment.app.Fragment
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ktx.database
+import com.google.firebase.database.ktx.snapshots
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
@@ -46,19 +47,18 @@ import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
+import dk.itu.moapd.scootersharing.base.R
 import dk.itu.moapd.scootersharing.base.activities.*
 import dk.itu.moapd.scootersharing.base.contracts.CameraContract
 import dk.itu.moapd.scootersharing.base.databinding.FragmentMainBinding
+import dk.itu.moapd.scootersharing.base.models.Scooter
+import dk.itu.moapd.scootersharing.base.utils.GeoClass
 import java.io.ByteArrayOutputStream
 
-/**
-Class for binding the view and instantiating Scooter.
- */
-class MainFragment : Fragment() {
+class MainFragment : GeoClass() {
 
     private var _binding: FragmentMainBinding? = null
-    private val binding
-        get() = checkNotNull(_binding) {
+    private val binding get() = checkNotNull(_binding) {}
 
         }
 
@@ -68,6 +68,7 @@ class MainFragment : Fragment() {
     private lateinit var signOutButton: Button
     private lateinit var rentedRideButton: Button
     private lateinit var cameraButton: Button
+    private lateinit var rentedRideButton: Button
     private lateinit var mapButton: Button
     private lateinit var bucket: StorageReference
     private lateinit var auth: FirebaseAuth
@@ -87,27 +88,48 @@ class MainFragment : Fragment() {
 
     }
 
-    private val takeLastPhoto = registerForActivityResult(CameraContract()) { bitmap ->
+    private val uploadLastScooterPhoto = registerForActivityResult(CameraContract()) { bitmap ->
         bitmap?.let {
-            Log.d("BITMAP_SUCCESS", bitmap.toString())
+            auth.currentUser?.let { user ->
+                val scooter = database.child("scooters").orderByChild("rentedBy").equalTo(user.uid)
 
-            val lastPhotoRef = bucket.child("last_photo_scooters")
+                scooter.get().addOnSuccessListener {
+                    Log.d("BITMAP_SUCCESS", bitmap.toString())
 
-            val baos = ByteArrayOutputStream()
+                    val scooterId = it.children.first().key.toString()
+                    val lastPhotoRef = bucket.child("last_photo_scooters")
+                    val baos = ByteArrayOutputStream()
 
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos)
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos)
 
-            val data = baos.toByteArray()
+                    val data = baos.toByteArray()
+                    val uploadTask = lastPhotoRef.child("${scooterId}_${user.uid}_${System.currentTimeMillis()}.jpg").putBytes(data)
 
-            val uploadTask = lastPhotoRef.child("last-photo.jpg").putBytes(data)
-
-            uploadTask.addOnSuccessListener {
-                Log.i("FIREBASE_BUCKET", "Image uploaded successfully")
+                    uploadTask.addOnSuccessListener {
+                        stopScooterRide(scooterId, user.uid)
+                        Log.d("FirebaseBucket", "Image uploaded successfully")
+                    }.addOnFailureListener {
+                        Log.e("FIREBASE_BUCKET", "Could not upload image")
+                    }
+                }
             }
+        }
+    }
 
-            uploadTask.addOnFailureListener {
-                Log.e("FIREBASE_BUCKET", "Could not upload image")
-            }
+    private fun stopScooterRide(scooterId: String, userID: String){
+        val scooter = database.child("scooters").child(scooterId)
+        scooter.get().addOnSuccessListener {
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Scooter no longer rented!")
+                .setMessage("The scooter '${it.child("name").value}' is no longer being rented!")
+                .setPositiveButton("Accept") { _, _ ->
+                    scooter.child("rentedBy").setValue("")
+                    scooter.child("isRented").setValue(false)
+                    scooter.child("startLatitude").setValue(coordinates.first)
+                    scooter.child("startLongitude").setValue(coordinates.second)
+                    scooter.child("timestamp").setValue(System.currentTimeMillis())
+                }
+                .show()
         }
     }
 
@@ -118,20 +140,50 @@ class MainFragment : Fragment() {
                 .build())
             scanner.process(InputImage.fromBitmap(bitmap, 0))
                 .addOnSuccessListener { barcodes ->
-                    for (barcode in barcodes) {
-                        Log.d("QR_SCANNED_SUCCESS", barcode.rawValue.toString())
-                    }
+                    startScooterRide(barcodes.first().rawValue.toString())
+                    Log.d("QR_SCANNED_SUCCESS",barcodes.first().rawValue.toString())
                 }.addOnFailureListener {
                     Log.d("QR_SCANNED_FAILURE","")
                 }
         }
     }
 
-    override fun onCreateView(inflater: LayoutInflater,
-                              container: ViewGroup?,
-                              savedInstanceState: Bundle?
-    ): View {
+    private fun startScooterRide(scooterId: String){
+        auth.currentUser?.let { user ->
+            val scooter = database.child("scooters").child(scooterId)
+            val userRents = database.child("scooters").orderByChild("rentedBy").equalTo(user.uid).get()
 
+            scooter.get().addOnSuccessListener {
+                if (it.child("isRented").value == false && userRents.result.childrenCount == 0L) {
+                    MaterialAlertDialogBuilder(requireContext())
+                        .setTitle(getString(R.string.alert_title_startRide))
+                        .setMessage("You scanned the scooter '${it.child("name").value}'\nDo you want to start the ride?")
+                        .setNegativeButton(getString(R.string.decline)) { _, _ -> }
+                        .setPositiveButton(getString(R.string.accept)) { _, _ ->
+                            scooter.child("rentedBy").setValue(user.uid)
+                            scooter.child("isRented").setValue(true)
+                            scooter.child("startLatitude").setValue(coordinates.first)
+                            scooter.child("startLongitude").setValue(coordinates.second)
+                            scooter.child("timestamp").setValue(System.currentTimeMillis())
+                        }.show()
+                } else {
+                    MaterialAlertDialogBuilder(requireContext())
+                        .setTitle("Scooter already rented!")
+                        .setMessage("The scooter '${it.child("name").value}' is already rented by someone else!")
+                        .setPositiveButton("Okay") { _, _ -> }
+                        .show()
+                }
+            }.addOnFailureListener {
+                MaterialAlertDialogBuilder(requireContext())
+                    .setTitle("Scooter not found!")
+                    .setMessage("A scooter with that ID was not found!")
+                    .setPositiveButton("Okay") { _, _ -> }
+                    .show()
+            }
+        }
+    }
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentMainBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -139,44 +191,19 @@ class MainFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-
-        createRideButton = binding.createRideButton
-        listRidesButton = binding.listRidesButton
-        startRideButton = binding.startRideButton
-        rentedRideButton = binding.rentedRideButton
-        signOutButton = binding.signOutButton
-        mapButton = binding.mapButton
-        cameraButton = binding.cameraButton
-
-
-        /** Start Ride
-         * Start camera intent
-         * scan QR code
-         * ask user if they want to rent the particular ride
-         * if accept, change "isRented" variable to true and start the ride.
-         * When "End Ride", take last_photo picture and update location based on your current position.
-         */
-
-        startRideButton.setOnClickListener {
-            Toast.makeText(activity, "Take a picture of Scooter's QR Code.",
+        binding.startRideButton.setOnClickListener {
+            Toast.makeText(activity, "Take a picture of Scooter's QR Code!",
                 Toast.LENGTH_SHORT)
                 .show()
-
             scanQRCodePhoto.launch(Unit)
         }
 
-        createRideButton.setOnClickListener {
-            val intent = Intent(activity, CreateRideActivity::class.java)
-            startActivity(intent)
-        }
-
-        listRidesButton.setOnClickListener {
-
+        binding.listRidesButton.setOnClickListener {
             val intent = Intent(activity, ListRidesActivity::class.java)
             startActivity(intent)
         }
 
-        signOutButton.setOnClickListener {
+        binding.signOutButton.setOnClickListener {
             auth.signOut()
 
             Toast.makeText(activity, "User logged out of the app.",
@@ -187,18 +214,17 @@ class MainFragment : Fragment() {
 
         }
 
-        mapButton.setOnClickListener {
+        binding.mapButton.setOnClickListener {
             val intent = Intent(activity, MapActivity::class.java)
             startActivity(intent)
         }
 
-        cameraButton.setOnClickListener {
-            takeLastPhoto.launch(Unit)
+        binding.cameraButton.setOnClickListener {
+            uploadLastScooterPhoto.launch(Unit)
         }
 
-        rentedRideButton.setOnClickListener {
-            val intent = Intent(activity, RentedRideActivity::class.java)
-            startActivity(intent)
+        binding.rentedRideButton.setOnClickListener {
+            scanQRCodePhoto.launch(Unit)
         }
 
         requestUserPermissions()

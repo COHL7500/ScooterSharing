@@ -18,6 +18,10 @@
     <string name="decline">Decline</string>
     <string name="accept">Accept</string>
     <string name="map">Map</string>
+    <string name="alert_title_scooterAlreadyRented">"Scooter already rented!"</string>
+    <string name="alert_supporting_text_scooterAlreadyRented">"This scooter is already being rented out!"</string>
+    <string name="alert_title_scooterNotFound">Scooter not found!</string>
+    <string name="alert_supporting_text_scooterNotFound">A scooter by this ID was not found!</string>
 
     <string-array name="scooter_names">
         <item>CPH001</item>
@@ -41,11 +45,9 @@
     <string name="longitude_text">Longitude</string>
     <string name="time_text">Time</string>
     <string name="address_text">Address</string>
-    <string name="camera_button">Take Picture</string>
+    <string name="camera_button">Stop Ride</string>
     <string name="qrscan_button">Scan QR-Code</string>
     <string name="create_ride_button">Create Ride</string>
-    <string name="rented_ride_button">Rented Ride</string>
-    <string name="title_rented_text">Your Current Ride</string>
-    <string name="end_ride_button">End Ride</string>
+    <string name="rented_ride_button">Rent Ride</string>
 
 </resources>

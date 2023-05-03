@@ -28,13 +28,15 @@ import android.net.Uri
  * Representing the Scooter name entity.
  * Consists of the name of the scooter and scooter location.
  */
-data class Scooter(val name: String? = "",
+data class Scooter(var img: String? = "",
+                   var isRented: Boolean? = false,
+                   var last_photo: String? = "",
+                   var name: String? = "",
                    var startLatitude: Double? = 0.0,
                    var startLongitude: Double? = 0.0,
-                   var timestamp: Long? = System.currentTimeMillis(),
-                   val img: String? = "catsquish.jpg",
-                   val last_photo: String? = "catsquish.jpg") {
+                   var timestamp: Long? = 0) {
+
     override fun toString(): String {
-        return "Scooter(name=$name, location=($startLatitude,$startLongitude), timestamp=$timestamp)"
+        return "Scooter(name=$name, location=($startLatitude,$startLongitude), timestamp=$timestamp, isRented=$isRented)"
     }
 }
