@@ -107,7 +107,7 @@ class CreateRideFragment : Fragment() {
 
                         if (name.isNotEmpty()) {
                             val timestamp = randomDate()
-                            val scooter = Scooter(name, coordLocation.first, coordLocation.second, timestamp, "scooter_thumbnail.png")
+                            val scooter = Scooter(name = name, startLongitude = coordLocation.first, startLatitude = coordLocation.second, timestamp = timestamp, img = "scooter_thumbnail.png")
 
                             auth.currentUser?.let { user ->
                                 val uid = database.child("scooters").push().key
