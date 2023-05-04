@@ -31,6 +31,7 @@ abstract class GeoClass: Fragment() {
     private lateinit var accelerationSensor: Sensor
     private var lastTimestamp: Long = 0
     private var lastSpeed: Double = 0.0
+    protected var speed: Double = 0.0
     private var maxSpeed: Double = 0.0 // String.format("%.2f", maxSpeed).toDouble()
     protected lateinit var coordinates: Pair<Double,Double>
 
@@ -91,7 +92,7 @@ abstract class GeoClass: Fragment() {
 
             val acceleration = total * 9.81
             val velocity = lastSpeed + acceleration * timeInterval
-            val speed = velocity * 3.6
+            speed = velocity * 3.6
             lastSpeed = velocity
 
             if (speed > maxSpeed)

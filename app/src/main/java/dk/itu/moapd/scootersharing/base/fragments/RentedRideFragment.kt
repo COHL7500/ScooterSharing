@@ -37,6 +37,7 @@ import dk.itu.moapd.scootersharing.base.services.LocationService
 import dk.itu.moapd.scootersharing.base.utils.GeoClass
 import java.io.ByteArrayOutputStream
 import java.util.*
+import kotlin.math.roundToInt
 
 class RentedRideFragment : GeoClass(), OnMapReadyCallback {
 
@@ -111,7 +112,7 @@ class RentedRideFragment : GeoClass(), OnMapReadyCallback {
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos)
 
             val data = baos.toByteArray()
-            val uploadTask = lastPhotoRef.child("${scooterId}_${userId}_${scooterTimestamp}.jpg").putBytes(data)
+            val uploadTask = lastPhotoRef.child("${scooterId}.jpg").putBytes(data)
 
             uploadTask.addOnSuccessListener {
                 stopScooterRide(scooterId, userId, scooterTimestamp)
@@ -169,8 +170,9 @@ class RentedRideFragment : GeoClass(), OnMapReadyCallback {
                 val distance = FloatArray(3)
 
                 distanceBetween(latitude, longitude, scooter?.startLatitude!!, scooter?.startLongitude!!, distance)
-                binding.distanceRentedText.text = "${(String.format("%.2f",distance[0]/1000)).toString()} km"
+                binding.distanceRentedText.text = "${"%.2f".format(distance[0]/1000)} km"
                 binding.nameRentedTextview.text = scooter?.name
+                binding.speedRentedTextview.text = "${"%.2f".format(speed/100000000)} km/h"
                 binding.timeRentedTextview.text = (scooter?.timestamp?.let { it1 ->
                     System.currentTimeMillis().minus(
                         it1

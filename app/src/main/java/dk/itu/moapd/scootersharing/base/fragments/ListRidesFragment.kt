@@ -69,9 +69,7 @@ class ListRidesFragment : Fragment() {
         database = FirebaseDatabase.getInstance().reference
 
         auth.currentUser?.let {
-            val query = database.child("scooters")
-                .orderByChild("name")
-
+            val query = database.child("scooters").orderByChild("name")
             val options = FirebaseRecyclerOptions.Builder<Scooter>()
                 .setQuery(query, Scooter::class.java)
                 .setLifecycleOwner(this)
