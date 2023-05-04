@@ -34,6 +34,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import dk.itu.moapd.scootersharing.base.R
 import dk.itu.moapd.scootersharing.base.activities.MainActivity
@@ -73,6 +74,7 @@ class RentedRideFragment : GeoClass(), OnMapReadyCallback {
         super.onCreate(savedInstanceState)
         auth = FirebaseAuth.getInstance()
         database = FirebaseDatabase.getInstance().reference
+        bucket = FirebaseStorage.getInstance().reference
         broadcastManager = LocalBroadcastManager.getInstance(requireContext())
         geoCoder = Geocoder(requireContext(), Locale.getDefault())
     }
@@ -113,16 +115,17 @@ class RentedRideFragment : GeoClass(), OnMapReadyCallback {
         bitmap?.let {
             Log.d("BITMAP_SUCCESS", bitmap.toString())
 
+            val scooterTimestamp = System.currentTimeMillis()
             val lastPhotoRef = bucket.child("last_photo_scooters")
             val baos = ByteArrayOutputStream()
 
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos)
 
             val data = baos.toByteArray()
-            val uploadTask = lastPhotoRef.child("${scooterId}_${userId}_${System.currentTimeMillis()}.jpg").putBytes(data)
+            val uploadTask = lastPhotoRef.child("${scooterId}_${userId}_${scooterTimestamp}.jpg").putBytes(data)
 
             uploadTask.addOnSuccessListener {
-                stopScooterRide(scooterId, userId)
+                stopScooterRide(scooterId, userId, scooterTimestamp)
                 Log.d("FirebaseBucket", "Image uploaded successfully")
             }.addOnFailureListener {
                 Log.e("FIREBASE_BUCKET", "Could not upload image")
@@ -130,7 +133,7 @@ class RentedRideFragment : GeoClass(), OnMapReadyCallback {
         }
     }
 
-    private fun stopScooterRide(scooterId: String, userID: String){
+    private fun stopScooterRide(scooterId: String, userID: String, timestamp: Long){
         val scooter = database.child("scooters").child(scooterId)
         scooter.get().addOnSuccessListener {
             MaterialAlertDialogBuilder(requireContext())
@@ -141,7 +144,7 @@ class RentedRideFragment : GeoClass(), OnMapReadyCallback {
                     scooter.child("isRented").setValue(false)
                     scooter.child("startLatitude").setValue(coordinates.first)
                     scooter.child("startLongitude").setValue(coordinates.second)
-                    scooter.child("timestamp").setValue(System.currentTimeMillis())
+                    scooter.child("timestamp").setValue(timestamp)
                     val intent = Intent(activity, MainActivity::class.java)
                     startActivity(intent)
                 }.show()
@@ -177,7 +180,6 @@ class RentedRideFragment : GeoClass(), OnMapReadyCallback {
                 val distance = FloatArray(3)
 
                 distanceBetween(latitude, longitude, scooter?.startLatitude!!, scooter?.startLongitude!!, distance)
-
                 binding.distanceRentedText.text = "${(String.format("%.2f",distance[0]/1000)).toString()} km"
                 binding.nameRentedTextview.text = scooter?.name
                 binding.timeRentedTextview.text = (scooter?.timestamp?.let { it1 ->

@@ -19,6 +19,7 @@ import dk.itu.moapd.scootersharing.base.services.LocationService
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 import kotlin.math.pow
 import kotlin.math.sqrt
 
@@ -53,9 +54,9 @@ abstract class GeoClass: Fragment() {
     }
 
     protected fun Long.toDateString(): String {
-        val date = Date(this)
         val format = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
-        return format.format(date)
+        format.setTimeZone(TimeZone.getTimeZone("UTC"))
+        return format.format(this)
     }
 
     private fun Address.toAddressString() : String {
