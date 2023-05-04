@@ -8,9 +8,15 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.location.Address
 import android.location.Geocoder
+import android.location.Location.distanceBetween
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -25,14 +31,22 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.storage.StorageReference
 import dk.itu.moapd.scootersharing.base.R
 import dk.itu.moapd.scootersharing.base.activities.MainActivity
+import dk.itu.moapd.scootersharing.base.contracts.CameraContract
 import dk.itu.moapd.scootersharing.base.databinding.FragmentRentedRideBinding
+import dk.itu.moapd.scootersharing.base.models.Scooter
 import dk.itu.moapd.scootersharing.base.services.LocationService
+import dk.itu.moapd.scootersharing.base.utils.GeoClass
+import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 class RentedRideFragment : GeoClass(), OnMapReadyCallback {
 
@@ -46,19 +60,10 @@ class RentedRideFragment : GeoClass(), OnMapReadyCallback {
 
         }
 
-    private lateinit var database: DatabaseReference
-
     private lateinit var locationService: LocationService
     private lateinit var broadcastManager: LocalBroadcastManager
     private lateinit var geoCoder: Geocoder
-    private var maxAcceleration: Float = 0.0f
-    private var latestLongitude: Double = 55.0
-    private var latestLatitude: Double = 56.0
-    private var latestTime: Long = 0
-    private lateinit var sensorManager: SensorManager
-    private lateinit var accelerationSensor: Sensor
     private lateinit var googleMap: GoogleMap
-    private lateinit var endRideButton: Button
     private lateinit var userMarker: Marker
     private lateinit var bucket: StorageReference
     private lateinit var auth: FirebaseAuth
@@ -70,9 +75,6 @@ class RentedRideFragment : GeoClass(), OnMapReadyCallback {
         database = FirebaseDatabase.getInstance().reference
         broadcastManager = LocalBroadcastManager.getInstance(requireContext())
         geoCoder = Geocoder(requireContext(), Locale.getDefault())
-
-        sensorManager = requireContext().getSystemService(Context.SENSOR_SERVICE) as SensorManager
-        accelerationSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -142,39 +144,8 @@ class RentedRideFragment : GeoClass(), OnMapReadyCallback {
                     scooter.child("timestamp").setValue(System.currentTimeMillis())
                     val intent = Intent(activity, MainActivity::class.java)
                     startActivity(intent)
-                }
-                .show()
-        }
                 }.show()
         }
-    }
-
-    private val accelerationListener: SensorEventListener = object : SensorEventListener {
-        override fun onSensorChanged(sensorEvent: SensorEvent) {
-            val ax = sensorEvent.values[0]
-            val ay = sensorEvent.values[1]
-            val az = sensorEvent.values[2]
-            val total = sqrt(
-                ax.pow(2) +
-                        ay.pow(2) +
-                        az.pow(2)
-            )
-            if (total > maxAcceleration)
-                maxAcceleration = total
-
-            Log.d("WOOOHOOOOOOOO ", maxAcceleration.toString())
-        }
-
-        override fun onAccuracyChanged(sensor: Sensor, i: Int) {
-        }
-    }
-
-
-
-    private fun Long.toDateString(): String {
-        val date = Date(this)
-        val format = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
-        return format.format(date)
     }
 
     private fun bitMapFromVector(vectorResID:Int): BitmapDescriptor {
@@ -189,6 +160,7 @@ class RentedRideFragment : GeoClass(), OnMapReadyCallback {
 
     override val locationReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
+
             val latitude = intent.getDoubleExtra("latitude", 0.0)
             val longitude = intent.getDoubleExtra("longitude", 0.0)
 
@@ -202,15 +174,10 @@ class RentedRideFragment : GeoClass(), OnMapReadyCallback {
                     )
                 )
                 userMarker.position = LatLng(latitude, longitude)
-        val filter = IntentFilter("location_result")
-        broadcastManager.registerReceiver(locationReceiver, filter)
-
-        sensorManager.registerListener(accelerationListener, accelerationSensor, SensorManager.SENSOR_DELAY_NORMAL)
-    }
-
                 val distance = FloatArray(3)
 
-                distanceBetween(latitude, longitude, coordinates.first, coordinates.second, distance)
+                distanceBetween(latitude, longitude, scooter?.startLatitude!!, scooter?.startLongitude!!, distance)
+
                 binding.distanceRentedText.text = "${(String.format("%.2f",distance[0]/1000)).toString()} km"
                 binding.nameRentedTextview.text = scooter?.name
                 binding.timeRentedTextview.text = (scooter?.timestamp?.let { it1 ->
@@ -220,12 +187,6 @@ class RentedRideFragment : GeoClass(), OnMapReadyCallback {
                 })?.toDateString()
             }
         }
-    override fun onPause() {
-        super.onPause()
-        requireActivity().stopService(Intent(requireContext(), LocationService::class.java))
-        broadcastManager.unregisterReceiver(locationReceiver)
-
-        sensorManager.unregisterListener(accelerationListener)
     }
 
     override fun onMapReady(googleMap: GoogleMap){
