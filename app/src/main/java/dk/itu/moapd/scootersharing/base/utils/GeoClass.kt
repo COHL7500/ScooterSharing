@@ -12,7 +12,6 @@ import android.location.Address
 import android.location.Geocoder
 import android.location.Location
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.fragment.app.Fragment
