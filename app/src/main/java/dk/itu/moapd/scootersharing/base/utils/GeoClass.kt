@@ -28,7 +28,9 @@ abstract class GeoClass: Fragment() {
     private lateinit var geoCoder: Geocoder
     private lateinit var sensorManager: SensorManager
     private lateinit var accelerationSensor: Sensor
-    private var maxAcceleration: Float = 0.0f
+    private var lastTimestamp: Long = 0
+    private var lastSpeed: Double = 0.0
+    private var maxSpeed: Double = 0.0 // String.format("%.2f", maxSpeed).toDouble()
     protected lateinit var coordinates: Pair<Double,Double>
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -70,6 +72,7 @@ abstract class GeoClass: Fragment() {
         return stringBuilder.toString()
     }
 
+    // km/h
     private val accelerationListener: SensorEventListener = object : SensorEventListener {
         override fun onSensorChanged(sensorEvent: SensorEvent) {
             val ax = sensorEvent.values[0]
@@ -80,10 +83,18 @@ abstract class GeoClass: Fragment() {
                         ay.pow(2) +
                         az.pow(2)
             )
-            if (total > maxAcceleration)
-                maxAcceleration = total
 
-            Log.d("WOOOHOOOOOOOO ", maxAcceleration.toString())
+            val timestamp = System.currentTimeMillis()
+            val timeInterval = (timestamp - lastTimestamp) / 1000.0
+            lastTimestamp = timestamp
+
+            val acceleration = total * 9.81
+            val velocity = lastSpeed + acceleration * timeInterval
+            val speed = velocity * 3.6
+            lastSpeed = velocity
+
+            if (speed > maxSpeed)
+                maxSpeed = speed
         }
 
         override fun onAccuracyChanged(sensor: Sensor, i: Int) {
