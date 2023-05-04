@@ -158,6 +158,7 @@ class RentedRideFragment : GeoClass(), OnMapReadyCallback {
 
             val latitude = intent.getDoubleExtra("latitude", 0.0)
             val longitude = intent.getDoubleExtra("longitude", 0.0)
+            var distance = distanceTo(latitude,longitude,scooter?.startLatitude!!,scooter?.startLongitude!!)[0]/1000
 
             coordinates = Pair(latitude,longitude)
             database.child("scooters").child(scooterId).get().addOnSuccessListener {
@@ -168,7 +169,7 @@ class RentedRideFragment : GeoClass(), OnMapReadyCallback {
                     )
                 )
                 userMarker.position = LatLng(latitude, longitude)
-                binding.distanceRentedText.text = "${"%.2f".format(distanceTo(latitude,longitude,scooter?.startLatitude!!,scooter?.startLongitude!!)[0]/1000)} km"
+                binding.distanceRentedText.text = "${"%.2f".format(distance)} km"
                 binding.nameRentedTextview.text = scooter?.name
                 binding.speedRentedTextview.text = "${"%.2f".format(speed/100000000)} km/h"
                 binding.timeRentedTextview.text = (scooter?.timestamp?.let { it1 ->
@@ -176,6 +177,7 @@ class RentedRideFragment : GeoClass(), OnMapReadyCallback {
                         it1
                     )
                 })?.toDateString()
+                binding.priceRentedTextview.text = "${"%.2f".format(distance*50)} kr,-"
             }
         }
     }
