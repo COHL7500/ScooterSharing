@@ -90,7 +90,6 @@ class MapFragment : GeoClass(), OnMapReadyCallback {
         return BitmapDescriptorFactory.fromBitmap(bitmap)
     }
 
-
     override fun onMapReady(googleMap: GoogleMap){
         if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
             || ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
@@ -102,7 +101,6 @@ class MapFragment : GeoClass(), OnMapReadyCallback {
 
         // Runs a coroutine on the IO thread, thus preventing blocking the UI (main) thread.
         // This is necessary as onMapReady runs asynchronously.
-
         lifecycleScope.launch(Dispatchers.IO) {
             var scooterList: List<Scooter>
 
@@ -128,9 +126,7 @@ class MapFragment : GeoClass(), OnMapReadyCallback {
             }
         }
 
-        val itu = LatLng(55.6596, 12.5910)
-
-        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(itu, 13f))
+        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(55.6596, 12.5910), 13f))
     }
 
     override fun onDestroyView() {

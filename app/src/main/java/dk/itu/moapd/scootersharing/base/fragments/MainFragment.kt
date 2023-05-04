@@ -43,9 +43,6 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ktx.database
-import com.google.firebase.database.ktx.snapshots
-import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
@@ -58,7 +55,6 @@ import dk.itu.moapd.scootersharing.base.contracts.CameraContract
 import dk.itu.moapd.scootersharing.base.databinding.FragmentMainBinding
 import dk.itu.moapd.scootersharing.base.models.Scooter
 import dk.itu.moapd.scootersharing.base.utils.GeoClass
-import java.io.ByteArrayOutputStream
 
 class MainFragment : GeoClass() {
 
@@ -87,6 +83,10 @@ class MainFragment : GeoClass() {
                 .build())
             scanner.process(InputImage.fromBitmap(bitmap, 0))
                 .addOnSuccessListener { barcodes ->
+                    if(barcodes.isEmpty()) {
+                        debugAlert("Scanning failed!","No QR code got recognised in the photo!")
+                        return@addOnSuccessListener
+                    }
                     Log.d("QR_SCANNED_SUCCESS",barcodes.first().rawValue.toString())
                     startScooterRide(barcodes.first().rawValue.toString())
                 }.addOnFailureListener {
@@ -116,31 +116,23 @@ class MainFragment : GeoClass() {
                             startActivity(intent)
                         }.show()
                 } else {
-                    MaterialAlertDialogBuilder(requireContext())
-                        .setTitle("Scooter already rented!")
-                        .setMessage("The scooter '${it.child("name").value}' is already rented by someone else!")
-                        .setPositiveButton("Okay") { _, _ -> }
-                        .show()
+                    debugAlert("Scooter already rented!", "The scooter '${it.child("name").value}' is already rented by someone else!")
                 }
             }.addOnFailureListener {
-                MaterialAlertDialogBuilder(requireContext())
-                    .setTitle("Scooter not found!")
-                    .setMessage("A scooter with that ID was not found!")
-                    .setPositiveButton("Okay") { _, _ -> }
-                    .show()
+                debugAlert("Scooter not found!", "A scooter with that ID was not found!")
             }
         }
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        _binding = FragmentMainBinding.inflate(inflater, container, false)
-        return binding.root
+    private fun debugAlert(title: String, message: String?){
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(title)
+            .setMessage(message)
+            .setPositiveButton("Okay") { _, _ -> }
+            .show()
     }
 
-    @RequiresApi(Build.VERSION_CODES.S)
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
+    private fun checkStatus(){
         auth.currentUser?.let { user ->
             val userRents = database.child("scooters").child("-NUSloF3MzuA_sVhIC0l")
             userRents.get().addOnCompleteListener {
@@ -153,6 +145,16 @@ class MainFragment : GeoClass() {
                 }
             }
         }
+    }
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        _binding = FragmentMainBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    @RequiresApi(Build.VERSION_CODES.S)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
         binding.startRideButton.setOnClickListener {
             Toast.makeText(activity, "Take a picture of Scooter's QR Code!", Toast.LENGTH_SHORT).show()
@@ -209,6 +211,11 @@ class MainFragment : GeoClass() {
 
         if (permissionsToRequest.size > 0)
             requestPermissions(permissionsToRequest.toTypedArray(), ALL_PERMISSIONS_RESULT)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        checkStatus()
     }
 
     override fun onDestroyView() {
