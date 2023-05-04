@@ -18,6 +18,7 @@ import dk.itu.moapd.scootersharing.base.services.LocationService
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 import kotlin.math.pow
 import kotlin.math.sqrt
 
@@ -29,6 +30,7 @@ abstract class GeoClass: Fragment() {
     private lateinit var accelerationSensor: Sensor
     private var lastTimestamp: Long = 0
     private var lastSpeed: Double = 0.0
+    protected var speed: Double = 0.0
     private var maxSpeed: Double = 0.0 // String.format("%.2f", maxSpeed).toDouble()
     protected lateinit var coordinates: Pair<Double,Double>
 
@@ -54,9 +56,9 @@ abstract class GeoClass: Fragment() {
     }
 
     protected fun Long.toDateString(): String {
-        val date = Date(this)
         val format = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
-        return format.format(date)
+        format.setTimeZone(TimeZone.getTimeZone("UTC"))
+        return format.format(this)
     }
 
     private fun Address.toAddressString() : String {
@@ -89,7 +91,7 @@ abstract class GeoClass: Fragment() {
 
             val acceleration = total * 9.81
             val velocity = lastSpeed + acceleration * timeInterval
-            val speed = velocity * 3.6
+            speed = velocity * 3.6
             lastSpeed = velocity
 
             if (speed > maxSpeed)

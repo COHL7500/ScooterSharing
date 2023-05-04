@@ -69,9 +69,7 @@ class ListRidesFragment : Fragment() {
         database = FirebaseDatabase.getInstance().reference
 
         auth.currentUser?.let {
-            val query = database.child("scooters")
-                .orderByChild("name")
-
+            val query = database.child("scooters").orderByChild("name")
             val options = FirebaseRecyclerOptions.Builder<Scooter>()
                 .setQuery(query, Scooter::class.java)
                 .setLifecycleOwner(this)
@@ -81,11 +79,7 @@ class ListRidesFragment : Fragment() {
         }
     }
 
-    override fun onCreateView(inflater: LayoutInflater,
-                              container: ViewGroup?,
-                              savedInstanceState: Bundle?
-    ): View {
-
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentListRidesBinding.inflate(inflater, container, false)
         recyclerView = binding.recyclerView
         recyclerView.layoutManager = LinearLayoutManager(activity)
@@ -95,9 +89,6 @@ class ListRidesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        /**
-         * Sets name and location of scooter, then clears the text fields.
-         */
         binding.recyclerView.layoutManager = LinearLayoutManager(activity)
         binding.recyclerView.addItemDecoration(DividerItemDecoration(activity, DividerItemDecoration.VERTICAL))
         binding.recyclerView.adapter = adapter
