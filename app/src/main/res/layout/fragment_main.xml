@@ -1,170 +1,88 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center_vertical"
+    android:gravity="center_horizontal"
     android:orientation="vertical"
-    android:gravity="center"
     tools:context=".fragments.MainFragment">
 
-    <!-- Name Field -->
-    <LinearLayout
-        android:layout_width="match_parent"
+    <TextView
+        android:id="@+id/app_textview_name"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:layout_weight="1"
+        android:paddingBottom="15dp"
+        android:text="@string/app_name"
+        android:textAlignment="center"
+        android:textColor="@color/black"
+        android:textSize="35sp" />
 
-        <TextView
-            android:id="@+id/app_textview_name"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:paddingBottom="15dp"
-            android:text="@string/app_name"
-            android:textAlignment="center"
-            android:textColor="@color/black"
-            android:textSize="24sp" />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
+    <Button
+        android:id="@+id/start_ride_button"
+        android:layout_width="200dp"
         android:layout_height="wrap_content"
-        android:layout_margin="5dp"
-        android:gravity="center"
-        android:orientation="horizontal">
+        android:drawableLeft="@drawable/baseline_start_24"
+        android:drawableTint="@color/white"
+        android:padding="15dp"
+        android:text="@string/start_ride_button"
+        android:textAlignment="textStart"
+        android:textAllCaps="false"
+        android:textColor="@color/white"
+        android:textSize="16sp"
+        app:iconGravity="textEnd" />
 
-        <Button
-            android:id="@+id/start_ride_button"
-            android:layout_width="170dp"
-            android:layout_height="wrap_content"
-            android:background="@color/purple_500"
-            android:drawableLeft="@drawable/baseline_start_24"
-            android:drawableTint="@color/white"
-            android:text="@string/start_ride_button"
-            android:textAllCaps="false"
-            android:textColor="@color/white"
-            android:textSize="16sp" />
-    </LinearLayout>
-
-
-    <LinearLayout
-        android:layout_width="match_parent"
+    <Button
+        android:id="@+id/list_rides_button"
+        android:layout_width="200dp"
         android:layout_height="wrap_content"
-        android:layout_margin="5dp"
-        android:gravity="center"
-        android:orientation="horizontal">
+        android:drawableLeft="@drawable/baseline_list_24"
+        android:drawableTint="#FFFFFF"
+        android:padding="15dp"
+        android:text="@string/list_rides_button"
+        android:textAlignment="textStart"
+        android:textAllCaps="false"
+        android:textColor="@color/white"
+        android:textSize="16sp" />
 
-        <Button
-            android:id="@+id/create_ride_button"
-            android:layout_width="150dp"
-            android:layout_height="wrap_content"
-            android:background="@color/purple_500"
-            android:drawableTint="#FFFFFF"
-            android:text="@string/create_ride_button"
-            android:textAllCaps="false"
-            android:textColor="@color/white"
-            android:textSize="16sp" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
+    <Button
+        android:id="@+id/map_button"
+        android:layout_width="200dp"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        android:layout_margin="5dp"
-        android:orientation="horizontal">
+        android:drawableLeft="@drawable/baseline_map_24"
+        android:drawableTint="#FFFFFF"
+        android:padding="15dp"
+        android:text="@string/map"
+        android:textAlignment="textStart"
+        android:textAllCaps="false"
+        android:textColor="@color/white"
+        android:textSize="16sp" />
 
-        <Button
-            android:id="@+id/list_rides_button"
-            android:layout_width="150dp"
-            android:layout_height="wrap_content"
-            android:background="@color/purple_500"
-            android:drawableStart="@drawable/baseline_list_24"
-            android:drawableTint="#FFFFFF"
-            android:text="@string/list_rides_button"
-            android:textAllCaps="false"
-            android:textColor="@color/white"
-            android:textSize="16sp" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
+    <Button
+        android:id="@+id/rented_ride_button"
+        android:layout_width="200dp"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        android:layout_margin="5dp"
-        android:orientation="horizontal">
+        android:drawableLeft="@drawable/baseline_list_24"
+        android:drawableTint="#FFFFFF"
+        android:padding="15dp"
+        android:text="@string/rented_ride_button"
+        android:textAlignment="textStart"
+        android:textAllCaps="false"
+        android:textColor="@color/white"
+        android:textSize="16sp" />
 
-        <Button
-            android:id="@+id/map_button"
-            android:layout_width="150dp"
-            android:layout_height="wrap_content"
-            android:background="@color/purple_500"
-            android:drawableStart="@drawable/baseline_map_24"
-            android:drawableTint="#FFFFFF"
-            android:text="@string/map"
-            android:textAllCaps="false"
-            android:textColor="@color/white"
-            android:textSize="16sp" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
+    <Button
+        android:id="@+id/sign_out_button"
+        android:layout_width="200dp"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        android:layout_margin="5dp"
-        android:orientation="horizontal">
-
-        <Button
-            android:id="@+id/camera_button"
-            android:layout_width="150dp"
-            android:layout_height="wrap_content"
-            android:background="@color/purple_500"
-            android:drawableStart="@drawable/baseline_list_24"
-            android:drawableTint="#FFFFFF"
-            android:text="@string/camera_button"
-            android:textAllCaps="false"
-            android:textColor="@color/white"
-            android:textSize="16sp" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:layout_margin="5dp"
-        android:orientation="horizontal">
-
-        <Button
-            android:id="@+id/rented_ride_button"
-            android:layout_width="150dp"
-            android:layout_height="wrap_content"
-            android:background="@color/purple_500"
-            android:drawableStart="@drawable/baseline_list_24"
-            android:drawableTint="#FFFFFF"
-            android:text="@string/rented_ride_button"
-            android:textAllCaps="false"
-            android:textColor="@color/white"
-            android:textSize="16sp" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="5dp"
-        android:gravity="center"
-        android:orientation="horizontal">
-
-        <Button
-            android:id="@+id/sign_out_button"
-            android:layout_width="150dp"
-            android:layout_height="wrap_content"
-            android:background="@color/purple_500"
-            android:drawableStart="@drawable/logout_icon_24"
-            android:drawableTint="#FFFFFF"
-            android:text="@string/sign_out_button"
-            android:textAllCaps="false"
-            android:textColor="@color/white"
-            android:textSize="16sp" />
-    </LinearLayout>
-
-
+        android:drawableLeft="@drawable/logout_icon_24"
+        android:drawableTint="#FFFFFF"
+        android:padding="15dp"
+        android:text="@string/sign_out_button"
+        android:textAlignment="textStart"
+        android:textAllCaps="false"
+        android:textColor="@color/white"
+        android:textSize="16sp" />
 </LinearLayout>

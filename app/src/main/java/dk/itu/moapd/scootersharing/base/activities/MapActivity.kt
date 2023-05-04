@@ -43,6 +43,7 @@ class MapActivity : AppCompatActivity() {
         val view = binding.root
 
         setContentView(view)
+        supportActionBar?.hide()
 
         val fragmentTransaction = supportFragmentManager.beginTransaction()
         fragmentTransaction.add(R.id.fragment_container_view, urFragment)
