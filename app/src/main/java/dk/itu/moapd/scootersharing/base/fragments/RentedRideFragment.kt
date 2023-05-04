@@ -8,15 +8,21 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.location.Address
 import android.location.Geocoder
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.getSystemService
 import androidx.fragment.app.Fragment
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -31,8 +37,11 @@ import dk.itu.moapd.scootersharing.base.R
 import dk.itu.moapd.scootersharing.base.activities.MainActivity
 import dk.itu.moapd.scootersharing.base.databinding.FragmentRentedRideBinding
 import dk.itu.moapd.scootersharing.base.services.LocationService
+import java.lang.Math.sqrt
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 class RentedRideFragment : Fragment(), OnMapReadyCallback {
 
@@ -47,9 +56,12 @@ class RentedRideFragment : Fragment(), OnMapReadyCallback {
     private lateinit var locationService: LocationService
     private lateinit var broadcastManager: LocalBroadcastManager
     private lateinit var geoCoder: Geocoder
+    private var maxAcceleration: Float = 0.0f
     private var latestLongitude: Double = 55.0
     private var latestLatitude: Double = 56.0
     private var latestTime: Long = 0
+    private lateinit var sensorManager: SensorManager
+    private lateinit var accelerationSensor: Sensor
     private lateinit var googleMap: GoogleMap
     private lateinit var endRideButton: Button
     private lateinit var userMarker: Marker
@@ -59,6 +71,9 @@ class RentedRideFragment : Fragment(), OnMapReadyCallback {
         database = FirebaseDatabase.getInstance().reference
         broadcastManager = LocalBroadcastManager.getInstance(requireContext())
         geoCoder = Geocoder(requireContext(), Locale.getDefault())
+
+        sensorManager = requireContext().getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        accelerationSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
     }
 
     private val locationReceiver = object : BroadcastReceiver() {
@@ -104,6 +119,28 @@ class RentedRideFragment : Fragment(), OnMapReadyCallback {
         }
     }
 
+    private val accelerationListener: SensorEventListener = object : SensorEventListener {
+        override fun onSensorChanged(sensorEvent: SensorEvent) {
+            val ax = sensorEvent.values[0]
+            val ay = sensorEvent.values[1]
+            val az = sensorEvent.values[2]
+            val total = sqrt(
+                ax.pow(2) +
+                        ay.pow(2) +
+                        az.pow(2)
+            )
+            if (total > maxAcceleration)
+                maxAcceleration = total
+
+            Log.d("WOOOHOOOOOOOO ", maxAcceleration.toString())
+        }
+
+        override fun onAccuracyChanged(sensor: Sensor, i: Int) {
+        }
+    }
+
+
+
     private fun Long.toDateString(): String {
         val date = Date(this)
         val format = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
@@ -127,13 +164,16 @@ class RentedRideFragment : Fragment(), OnMapReadyCallback {
 
         val filter = IntentFilter("location_result")
         broadcastManager.registerReceiver(locationReceiver, filter)
+
+        sensorManager.registerListener(accelerationListener, accelerationSensor, SensorManager.SENSOR_DELAY_NORMAL)
     }
 
     override fun onPause() {
         super.onPause()
-
         requireActivity().stopService(Intent(requireContext(), LocationService::class.java))
         broadcastManager.unregisterReceiver(locationReceiver)
+
+        sensorManager.unregisterListener(accelerationListener)
     }
 
     override fun onMapReady(googleMap: GoogleMap){
@@ -144,7 +184,13 @@ class RentedRideFragment : Fragment(), OnMapReadyCallback {
 
         this.googleMap = googleMap
 
-        googleMap.mapType = GoogleMap.MAP_TYPE_HYBRID
+        val result : FloatArray = FloatArray(3)
+
+        Log.d("VALUE_DISTANCE_BETWEEN",  result.contentToString())
+
+        android.location.Location.distanceBetween(55.6596,12.5910, 60.9, 15.3, result)
+
+        googleMap.mapType = GoogleMap.MAP_TYPE_NORMAL
 
         val itu = LatLng(55.6596, 12.5910)
 

@@ -26,6 +26,7 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings.Global.getString
 import android.util.Log
@@ -34,6 +35,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat.requestPermissions
 import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.content.ContextCompat.checkSelfPermission
@@ -181,6 +183,7 @@ class MainFragment : GeoClass() {
         return binding.root
     }
 
+    @RequiresApi(Build.VERSION_CODES.S)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -238,12 +241,14 @@ class MainFragment : GeoClass() {
         return result
     }
 
+    @RequiresApi(Build.VERSION_CODES.S)
     private fun requestUserPermissions() {
 
         val permissions: ArrayList<String> = ArrayList()
         permissions.add(Manifest.permission.ACCESS_FINE_LOCATION)
         permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION)
         permissions.add(Manifest.permission.CAMERA)
+        permissions.add(Manifest.permission.HIGH_SAMPLING_RATE_SENSORS)
 
         val permissionsToRequest = permissionsToRequest(permissions)
 

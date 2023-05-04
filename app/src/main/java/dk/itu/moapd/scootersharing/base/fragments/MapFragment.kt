@@ -28,6 +28,7 @@ import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import dk.itu.moapd.scootersharing.base.R
@@ -97,7 +98,7 @@ class MapFragment : GeoClass(), OnMapReadyCallback {
             return
 
         googleMap.isMyLocationEnabled = true
-        googleMap.mapType = GoogleMap.MAP_TYPE_HYBRID
+        googleMap.mapType = GoogleMap.MAP_TYPE_NORMAL
 
         // Runs a coroutine on the IO thread, thus preventing blocking the UI (main) thread.
         // This is necessary as onMapReady runs asynchronously.
