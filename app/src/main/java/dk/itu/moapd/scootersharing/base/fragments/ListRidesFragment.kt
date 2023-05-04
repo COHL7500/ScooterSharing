@@ -22,6 +22,7 @@
 
 package dk.itu.moapd.scootersharing.base.fragments
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -40,20 +41,19 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 import dk.itu.moapd.scootersharing.base.*
+import dk.itu.moapd.scootersharing.base.activities.RentedRideActivity
 import dk.itu.moapd.scootersharing.base.adapters.CustomFirebaseAdapter
 import dk.itu.moapd.scootersharing.base.databinding.FragmentListRidesBinding
 import dk.itu.moapd.scootersharing.base.models.Scooter
+import dk.itu.moapd.scootersharing.base.utils.GeoClass
 
 /**
 Class for binding the view and instantiating Scooter.
  */
-class ListRidesFragment : Fragment() {
+class ListRidesFragment : GeoClass() {
 
     private var _binding: FragmentListRidesBinding? = null
-    private val binding
-        get() = checkNotNull(_binding) {
-
-        }
+    private val binding get() = checkNotNull(_binding) {}
 
     private lateinit var auth: FirebaseAuth
     private lateinit var recyclerView: RecyclerView
@@ -65,16 +65,15 @@ class ListRidesFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         auth = FirebaseAuth.getInstance()
         database = FirebaseDatabase.getInstance().reference
-
         auth.currentUser?.let {
             val query = database.child("scooters").orderByChild("name")
             val options = FirebaseRecyclerOptions.Builder<Scooter>()
                 .setQuery(query, Scooter::class.java)
                 .setLifecycleOwner(this)
                 .build()
-
             adapter = CustomFirebaseAdapter(options)
         }
     }
@@ -92,31 +91,6 @@ class ListRidesFragment : Fragment() {
         binding.recyclerView.layoutManager = LinearLayoutManager(activity)
         binding.recyclerView.addItemDecoration(DividerItemDecoration(activity, DividerItemDecoration.VERTICAL))
         binding.recyclerView.adapter = adapter
-
-        val swipeHandler = object : SwipeToDeleteCallback() {
-            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                super.onSwiped(viewHolder, direction)
-
-                MaterialAlertDialogBuilder(requireContext())
-                    .setTitle(getString(R.string.alert_title_deleteRides))
-                    .setMessage(getString(R.string.alert_supporting_text_deleteRides))
-                    .setNegativeButton(getString(R.string.decline)) { _, _ -> }
-                    .setPositiveButton(getString(R.string.accept)) { _, _ ->
-                        val adapter = recyclerView.adapter as CustomFirebaseAdapter
-
-                        adapter.getRef(viewHolder.adapterPosition).removeValue()
-
-                        Toast.makeText(viewHolder.itemView.context, "Ride deleted!",
-                            Toast.LENGTH_SHORT)
-                            .show()
-                    }
-                    .show()
-            }
-
-        }
-
-        val itemTouchHelper = ItemTouchHelper(swipeHandler)
-        itemTouchHelper.attachToRecyclerView(recyclerView)
     }
 
     override fun onDestroyView() {

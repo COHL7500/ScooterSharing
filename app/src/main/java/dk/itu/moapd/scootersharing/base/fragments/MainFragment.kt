@@ -80,7 +80,7 @@ class MainFragment : GeoClass() {
         bucket = FirebaseStorage.getInstance().reference
     }
 
-    private val scanQRCodePhoto = registerForActivityResult(CameraContract()) { bitmap ->
+    val scanQRCodePhoto = registerForActivityResult(CameraContract()) { bitmap ->
         bitmap?.let {
             val scanner = BarcodeScanning.getClient(BarcodeScannerOptions.Builder()
                 .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
@@ -141,8 +141,21 @@ class MainFragment : GeoClass() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        auth.currentUser?.let { user ->
+            val userRents = database.child("scooters").child("-NUSloF3MzuA_sVhIC0l")
+            userRents.get().addOnCompleteListener {
+                if(it.isSuccessful){
+                    val scooter = it.result.getValue(Scooter::class.java)
+                    if(scooter?.isRented == true) {
+                        binding.startRideButton.visibility = View.GONE
+                        binding.rentedRideButton.visibility = View.VISIBLE
+                    }
+                }
+            }
+        }
+
         binding.startRideButton.setOnClickListener {
-            //Toast.makeText(activity, "Take a picture of Scooter's QR Code!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(activity, "Take a picture of Scooter's QR Code!", Toast.LENGTH_SHORT).show()
             scanQRCodePhoto.launch(Unit)
         }
 

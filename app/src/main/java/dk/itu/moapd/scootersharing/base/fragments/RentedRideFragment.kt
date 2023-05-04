@@ -14,6 +14,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
@@ -102,6 +103,7 @@ class RentedRideFragment : GeoClass(), OnMapReadyCallback {
     }
 
     private val uploadLastScooterPhoto = registerForActivityResult(CameraContract()) { bitmap ->
+        Toast.makeText(activity, "Take a picture of Scooter!", Toast.LENGTH_SHORT).show()
         bitmap?.let {
             Log.d("BITMAP_SUCCESS", bitmap.toString())
 
@@ -158,7 +160,6 @@ class RentedRideFragment : GeoClass(), OnMapReadyCallback {
             val longitude = intent.getDoubleExtra("longitude", 0.0)
 
             coordinates = Pair(latitude,longitude)
-
             database.child("scooters").child(scooterId).get().addOnSuccessListener {
                 googleMap.moveCamera(
                     CameraUpdateFactory.newLatLngZoom(
@@ -167,10 +168,7 @@ class RentedRideFragment : GeoClass(), OnMapReadyCallback {
                     )
                 )
                 userMarker.position = LatLng(latitude, longitude)
-                val distance = FloatArray(3)
-
-                distanceBetween(latitude, longitude, scooter?.startLatitude!!, scooter?.startLongitude!!, distance)
-                binding.distanceRentedText.text = "${"%.2f".format(distance[0]/1000)} km"
+                binding.distanceRentedText.text = "${"%.2f".format(distanceTo(latitude,longitude,scooter?.startLatitude!!,scooter?.startLongitude!!)[0]/1000)} km"
                 binding.nameRentedTextview.text = scooter?.name
                 binding.speedRentedTextview.text = "${"%.2f".format(speed/100000000)} km/h"
                 binding.timeRentedTextview.text = (scooter?.timestamp?.let { it1 ->

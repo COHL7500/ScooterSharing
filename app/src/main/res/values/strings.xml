@@ -6,7 +6,7 @@
     <string name="edit_scooter_name">Enter the scooter name…</string>
     <string name="edit_scooter_location">Enter the location…</string>
     <string name="start_ride_button">Start Ride</string>
-    <string name="list_rides_button">List Rides</string>
+    <string name="list_rides_button">List Scooters</string>
     <string name="sign_out_button">Sign Out</string>
     <string name="alert_title_deleteRides">Delete Ride</string>
     <string name="alert_supporting_text_deleteRides">Are you sure you want to permanently delete ride?</string>
@@ -48,7 +48,7 @@
     <string name="camera_button">Stop Ride</string>
     <string name="qrscan_button">Scan QR-Code</string>
     <string name="create_ride_button">Create Ride</string>
-    <string name="rented_ride_button">Rent Ride</string>
+    <string name="rented_ride_button">Current Ride</string>
     <string name="title_rented_text">Your Current Ride</string>
     <string name="end_ride_button">End Ride</string>
 

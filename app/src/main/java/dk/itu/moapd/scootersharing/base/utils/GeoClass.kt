@@ -10,9 +10,11 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.location.Address
 import android.location.Geocoder
+import android.location.Location
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.fragment.app.Fragment
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import dk.itu.moapd.scootersharing.base.services.LocationService
@@ -34,6 +36,28 @@ abstract class GeoClass: Fragment() {
     protected var speed: Double = 0.0
     private var maxSpeed: Double = 0.0 // String.format("%.2f", maxSpeed).toDouble()
     protected lateinit var coordinates: Pair<Double,Double>
+
+    companion object {
+        private fun Address.toAddressString() : String {
+            val address = this
+            val stringBuilder = StringBuilder()
+            stringBuilder.apply {
+                append(address.getAddressLine(0))
+            }
+            return stringBuilder.toString()
+        }
+        @Suppress("DEPRECATION")
+        fun getAddress(context: Context, latitude: Double, longitude: Double) : String? {
+            val geocoder = Geocoder(context, Locale.getDefault())
+            return geocoder.getFromLocation(latitude, longitude, 1)?.firstOrNull()?.toAddressString()
+        }
+        
+        fun distanceTo(latitude1: Double, longitude1: Double, latitude2: Double, longitude2: Double) : FloatArray {
+            val distance = FloatArray(3)
+            Location.distanceBetween(latitude1, longitude1, latitude2, longitude2, distance)
+            return distance
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,18 +84,6 @@ abstract class GeoClass: Fragment() {
         val format = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
         format.setTimeZone(TimeZone.getTimeZone("UTC"))
         return format.format(this)
-    }
-
-    private fun Address.toAddressString() : String {
-        val address = this
-        val stringBuilder = StringBuilder()
-        stringBuilder.apply {
-            append(address.getAddressLine(0)).append("\n")
-            append(address.locality).append("\n")
-            append(address.postalCode).append("\n")
-            append(address.countryName)
-        }
-        return stringBuilder.toString()
     }
 
     // km/h
@@ -103,17 +115,10 @@ abstract class GeoClass: Fragment() {
         }
     }
 
-    @Suppress("DEPRECATION")
-    fun getAddress(latitude: Double, longitude: Double) : String? {
-        val geocoder = Geocoder(requireContext(), Locale.getDefault())
-        return geocoder.getFromLocation(latitude, longitude, 1)?.firstOrNull()?.toAddressString()
-    }
-
     override fun onResume() {
         super.onResume()
         requireActivity().startService(Intent(requireContext(), LocationService::class.java))
         broadcastManager.registerReceiver(locationReceiver, IntentFilter("location_result"))
-
         sensorManager.registerListener(accelerationListener, accelerationSensor, SensorManager.SENSOR_DELAY_NORMAL)
     }
 
