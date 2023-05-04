@@ -8,21 +8,15 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.hardware.Sensor
-import android.hardware.SensorEvent
-import android.hardware.SensorEventListener
-import android.hardware.SensorManager
 import android.location.Address
 import android.location.Geocoder
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.content.getSystemService
 import androidx.fragment.app.Fragment
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -37,15 +31,16 @@ import dk.itu.moapd.scootersharing.base.R
 import dk.itu.moapd.scootersharing.base.activities.MainActivity
 import dk.itu.moapd.scootersharing.base.databinding.FragmentRentedRideBinding
 import dk.itu.moapd.scootersharing.base.services.LocationService
-import java.lang.Math.sqrt
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.math.pow
-import kotlin.math.sqrt
 
-class RentedRideFragment : Fragment(), OnMapReadyCallback {
+class RentedRideFragment : GeoClass(), OnMapReadyCallback {
 
     private var _binding: FragmentRentedRideBinding? = null
+    private var scooterId: String = ""
+    private var userId: String = ""
+    private var scooter: Scooter? = null
+
     private val binding
         get() = checkNotNull(_binding) {
 
@@ -65,9 +60,13 @@ class RentedRideFragment : Fragment(), OnMapReadyCallback {
     private lateinit var googleMap: GoogleMap
     private lateinit var endRideButton: Button
     private lateinit var userMarker: Marker
+    private lateinit var bucket: StorageReference
+    private lateinit var auth: FirebaseAuth
+    private lateinit var database: DatabaseReference
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        auth = FirebaseAuth.getInstance()
         database = FirebaseDatabase.getInstance().reference
         broadcastManager = LocalBroadcastManager.getInstance(requireContext())
         geoCoder = Geocoder(requireContext(), Locale.getDefault())
@@ -76,28 +75,19 @@ class RentedRideFragment : Fragment(), OnMapReadyCallback {
         accelerationSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
     }
 
-    private val locationReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            latestLatitude = intent.getDoubleExtra("latitude", 0.0)
-            latestLongitude = intent.getDoubleExtra("longitude", 0.0)
-            latestTime = intent.getLongExtra("time", 0)
-
-            googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(latestLatitude, latestLongitude), 15f))
-
-            userMarker.position = LatLng(latestLatitude, latestLongitude)
-        }
-    }
-
-    override fun onCreateView(inflater: LayoutInflater,
-                              container: ViewGroup?,
-                              savedInstanceState: Bundle?
-    ): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentRentedRideBinding.inflate(inflater, container, false)
 
         val fragment = childFragmentManager.findFragmentById(R.id.google_maps) as SupportMapFragment?
         fragment?.getMapAsync(this)
 
-        endRideButton = binding.endRideButton
+        auth.currentUser?.let { user ->
+           database.child("scooters").orderByChild("rentedBy").equalTo(user.uid).get().addOnSuccessListener{
+               scooterId = it.children.first().key.toString()
+               scooter = it.child(scooterId).getValue(Scooter::class.java)
+               userId = user.uid
+           }
+        }
 
         return binding.root
     }
@@ -106,15 +96,55 @@ class RentedRideFragment : Fragment(), OnMapReadyCallback {
         super.onViewCreated(view, savedInstanceState)
         locationService = LocationService()
 
-        endRideButton.setOnClickListener {
+        binding.endRideButton.setOnClickListener {
             MaterialAlertDialogBuilder(requireContext())
                 .setTitle("End Ride")
                 .setMessage("Are you sure you want to end the ride?")
                 .setNegativeButton(getString(R.string.decline)) { _, _ -> }
                 .setPositiveButton(getString(R.string.accept)) { _, _ ->
+                    uploadLastScooterPhoto.launch(Unit)
+                }.show()
+        }
+    }
 
+    private val uploadLastScooterPhoto = registerForActivityResult(CameraContract()) { bitmap ->
+        bitmap?.let {
+            Log.d("BITMAP_SUCCESS", bitmap.toString())
+
+            val lastPhotoRef = bucket.child("last_photo_scooters")
+            val baos = ByteArrayOutputStream()
+
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos)
+
+            val data = baos.toByteArray()
+            val uploadTask = lastPhotoRef.child("${scooterId}_${userId}_${System.currentTimeMillis()}.jpg").putBytes(data)
+
+            uploadTask.addOnSuccessListener {
+                stopScooterRide(scooterId, userId)
+                Log.d("FirebaseBucket", "Image uploaded successfully")
+            }.addOnFailureListener {
+                Log.e("FIREBASE_BUCKET", "Could not upload image")
+            }
+        }
+    }
+
+    private fun stopScooterRide(scooterId: String, userID: String){
+        val scooter = database.child("scooters").child(scooterId)
+        scooter.get().addOnSuccessListener {
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Scooter no longer rented!")
+                .setMessage("The scooter '${it.child("name").value}' is no longer being rented!")
+                .setPositiveButton("Accept") { _, _ ->
+                    scooter.child("rentedBy").setValue("")
+                    scooter.child("isRented").setValue(false)
+                    scooter.child("startLatitude").setValue(coordinates.first)
+                    scooter.child("startLongitude").setValue(coordinates.second)
+                    scooter.child("timestamp").setValue(System.currentTimeMillis())
                     val intent = Intent(activity, MainActivity::class.java)
                     startActivity(intent)
+                }
+                .show()
+        }
                 }.show()
         }
     }
@@ -157,17 +187,39 @@ class RentedRideFragment : Fragment(), OnMapReadyCallback {
         return BitmapDescriptorFactory.fromBitmap(bitmap)
     }
 
-    override fun onResume() {
-        super.onResume()
+    override val locationReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            val latitude = intent.getDoubleExtra("latitude", 0.0)
+            val longitude = intent.getDoubleExtra("longitude", 0.0)
 
-        requireActivity().startService(Intent(requireContext(), LocationService::class.java))
+            coordinates = Pair(latitude,longitude)
 
+            database.child("scooters").child(scooterId).get().addOnSuccessListener {
+                googleMap.moveCamera(
+                    CameraUpdateFactory.newLatLngZoom(
+                        LatLng(latitude, longitude),
+                        15f
+                    )
+                )
+                userMarker.position = LatLng(latitude, longitude)
         val filter = IntentFilter("location_result")
         broadcastManager.registerReceiver(locationReceiver, filter)
 
         sensorManager.registerListener(accelerationListener, accelerationSensor, SensorManager.SENSOR_DELAY_NORMAL)
     }
 
+                val distance = FloatArray(3)
+
+                distanceBetween(latitude, longitude, coordinates.first, coordinates.second, distance)
+                binding.distanceRentedText.text = "${(String.format("%.2f",distance[0]/1000)).toString()} km"
+                binding.nameRentedTextview.text = scooter?.name
+                binding.timeRentedTextview.text = (scooter?.timestamp?.let { it1 ->
+                    System.currentTimeMillis().minus(
+                        it1
+                    )
+                })?.toDateString()
+            }
+        }
     override fun onPause() {
         super.onPause()
         requireActivity().stopService(Intent(requireContext(), LocationService::class.java))
@@ -182,47 +234,20 @@ class RentedRideFragment : Fragment(), OnMapReadyCallback {
         )
             return
 
+        val defLocITU = LatLng(55.6596, 12.5910)
+
         this.googleMap = googleMap
-
-        val result : FloatArray = FloatArray(3)
-
-        Log.d("VALUE_DISTANCE_BETWEEN",  result.contentToString())
-
-        android.location.Location.distanceBetween(55.6596,12.5910, 60.9, 15.3, result)
-
         googleMap.mapType = GoogleMap.MAP_TYPE_NORMAL
-
-        val itu = LatLng(55.6596, 12.5910)
-
         googleMap.uiSettings.isScrollGesturesEnabled = false
         googleMap.uiSettings.isMyLocationButtonEnabled = false
 
         userMarker = googleMap.addMarker(MarkerOptions()
-            .position(itu)
+            .position(defLocITU)
             .icon(bitMapFromVector(R.drawable.scooter_marker_icon_32))
         )!!
 
-        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(itu, 15f))
+        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(defLocITU, 15f))
     }
-
-    private fun Address.toAddressString() : String {
-        val address = this
-        val stringBuilder = StringBuilder()
-        stringBuilder.apply {
-            append(address.getAddressLine(0)).append("\n")
-            append(address.locality).append("\n")
-            append(address.postalCode).append("\n")
-            append(address.countryName)
-        }
-        return stringBuilder.toString()
-    }
-
-    @Suppress("DEPRECATION")
-    fun getAddress(latitude: Double, longitude: Double) : String? {
-        val geocoder = Geocoder(requireContext(), Locale.getDefault())
-        return geocoder.getFromLocation(latitude, longitude, 1)?.firstOrNull()?.toAddressString()
-    }
-
 
     override fun onDestroyView() {
         super.onDestroyView()

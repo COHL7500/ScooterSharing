@@ -67,7 +67,6 @@ class MainFragment : GeoClass() {
 
     private lateinit var bucket: StorageReference
     private lateinit var auth: FirebaseAuth
-
     private lateinit var database: DatabaseReference
 
     companion object {
@@ -79,53 +78,6 @@ class MainFragment : GeoClass() {
         auth = FirebaseAuth.getInstance()
         database = FirebaseDatabase.getInstance().reference
         bucket = FirebaseStorage.getInstance().reference
-
-
-    }
-
-    private val uploadLastScooterPhoto = registerForActivityResult(CameraContract()) { bitmap ->
-        bitmap?.let {
-            auth.currentUser?.let { user ->
-                val scooter = database.child("scooters").orderByChild("rentedBy").equalTo(user.uid)
-
-                scooter.get().addOnSuccessListener {
-                    Log.d("BITMAP_SUCCESS", bitmap.toString())
-
-                    val scooterId = it.children.first().key.toString()
-                    val lastPhotoRef = bucket.child("last_photo_scooters")
-                    val baos = ByteArrayOutputStream()
-
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos)
-
-                    val data = baos.toByteArray()
-                    val uploadTask = lastPhotoRef.child("${scooterId}_${user.uid}_${System.currentTimeMillis()}.jpg").putBytes(data)
-
-                    uploadTask.addOnSuccessListener {
-                        stopScooterRide(scooterId, user.uid)
-                        Log.d("FirebaseBucket", "Image uploaded successfully")
-                    }.addOnFailureListener {
-                        Log.e("FIREBASE_BUCKET", "Could not upload image")
-                    }
-                }
-            }
-        }
-    }
-
-    private fun stopScooterRide(scooterId: String, userID: String){
-        val scooter = database.child("scooters").child(scooterId)
-        scooter.get().addOnSuccessListener {
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Scooter no longer rented!")
-                .setMessage("The scooter '${it.child("name").value}' is no longer being rented!")
-                .setPositiveButton("Accept") { _, _ ->
-                    scooter.child("rentedBy").setValue("")
-                    scooter.child("isRented").setValue(false)
-                    scooter.child("startLatitude").setValue(coordinates.first)
-                    scooter.child("startLongitude").setValue(coordinates.second)
-                    scooter.child("timestamp").setValue(System.currentTimeMillis())
-                }
-                .show()
-        }
     }
 
     private val scanQRCodePhoto = registerForActivityResult(CameraContract()) { bitmap ->
@@ -135,8 +87,8 @@ class MainFragment : GeoClass() {
                 .build())
             scanner.process(InputImage.fromBitmap(bitmap, 0))
                 .addOnSuccessListener { barcodes ->
-                    startScooterRide(barcodes.first().rawValue.toString())
                     Log.d("QR_SCANNED_SUCCESS",barcodes.first().rawValue.toString())
+                    startScooterRide(barcodes.first().rawValue.toString())
                 }.addOnFailureListener {
                     Log.d("QR_SCANNED_FAILURE","")
                 }
@@ -160,6 +112,8 @@ class MainFragment : GeoClass() {
                             scooter.child("startLatitude").setValue(coordinates.first)
                             scooter.child("startLongitude").setValue(coordinates.second)
                             scooter.child("timestamp").setValue(System.currentTimeMillis())
+                            val intent = Intent(activity, RentedRideActivity::class.java)
+                            startActivity(intent)
                         }.show()
                 } else {
                     MaterialAlertDialogBuilder(requireContext())
@@ -188,9 +142,7 @@ class MainFragment : GeoClass() {
         super.onViewCreated(view, savedInstanceState)
 
         binding.startRideButton.setOnClickListener {
-            Toast.makeText(activity, "Take a picture of Scooter's QR Code!",
-                Toast.LENGTH_SHORT)
-                .show()
+            //Toast.makeText(activity, "Take a picture of Scooter's QR Code!", Toast.LENGTH_SHORT).show()
             scanQRCodePhoto.launch(Unit)
         }
 
@@ -215,10 +167,6 @@ class MainFragment : GeoClass() {
             startActivity(intent)
         }
 
-        binding.cameraButton.setOnClickListener {
-            uploadLastScooterPhoto.launch(Unit)
-        }
-
         binding.rentedRideButton.setOnClickListener {
             val intent = Intent(activity, RentedRideActivity::class.java)
             startActivity(intent)
@@ -227,12 +175,7 @@ class MainFragment : GeoClass() {
         requestUserPermissions()
     }
 
-
-
-
-
     private fun permissionsToRequest(permissions: ArrayList<String>): ArrayList<String> {
-
         val result: ArrayList<String> = ArrayList()
         for (permission in permissions)
             if (checkSelfPermission(requireContext(), permission) != PackageManager.PERMISSION_GRANTED)
@@ -243,7 +186,6 @@ class MainFragment : GeoClass() {
 
     @RequiresApi(Build.VERSION_CODES.S)
     private fun requestUserPermissions() {
-
         val permissions: ArrayList<String> = ArrayList()
         permissions.add(Manifest.permission.ACCESS_FINE_LOCATION)
         permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION)
@@ -253,10 +195,7 @@ class MainFragment : GeoClass() {
         val permissionsToRequest = permissionsToRequest(permissions)
 
         if (permissionsToRequest.size > 0)
-            requestPermissions(
-                permissionsToRequest.toTypedArray(),
-                ALL_PERMISSIONS_RESULT
-            )
+            requestPermissions(permissionsToRequest.toTypedArray(), ALL_PERMISSIONS_RESULT)
     }
 
     override fun onDestroyView() {

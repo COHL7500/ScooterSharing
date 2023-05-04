@@ -30,8 +30,8 @@ import android.net.Uri
  */
 data class Scooter(var img: String? = "",
                    var isRented: Boolean? = false,
-                   var last_photo: String? = "",
                    var name: String? = "",
+                   var rentedBy: String? = "",
                    var startLatitude: Double? = 0.0,
                    var startLongitude: Double? = 0.0,
                    var timestamp: Long? = 0) {

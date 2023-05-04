@@ -5,8 +5,9 @@
     android:id="@+id/fragment_rented_ride_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:weightSum="2"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
     tools:context=".fragments.RentedRideFragment">
 
     <LinearLayout
@@ -58,7 +59,6 @@
             android:paddingEnd="15dp"
             android:paddingTop="7dp"
             android:paddingBottom="7dp"
-            android:text="Scooter 5"
             android:textAlignment="textStart"
             android:textColor="@color/black"
             android:textSize="18sp" />
@@ -80,7 +80,6 @@
             android:paddingEnd="15dp"
             android:paddingTop="7dp"
             android:paddingBottom="7dp"
-            android:text="25.2km"
             android:textAlignment="textStart"
             android:textColor="@color/black"
             android:textSize="18sp" />
@@ -109,25 +108,17 @@
 
     </LinearLayout>
 
-
-    <LinearLayout
-        android:layout_width="match_parent"
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/end_ride_button"
+        android:layout_width="200dp"
         android:layout_height="wrap_content"
-        android:layout_margin="7dp"
-        android:paddingTop="15dp"
-        android:gravity="center"
-        android:orientation="horizontal">
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/end_ride_button"
-            app:cornerRadius="300dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@color/purple_500"
-            android:layout_margin="5dp"
-            android:text="@string/end_ride_button"
-            android:textAllCaps="false"
-            android:textColor="@color/white"
-            android:textSize="30sp" />
-    </LinearLayout>
+        android:drawableLeft="@drawable/outline_cancel_24"
+        android:drawableTint="#FFFFFF"
+        android:padding="15dp"
+        android:text="@string/end_ride_button"
+        android:layout_margin="10dp"
+        android:textAllCaps="false"
+        android:textAlignment="textStart"
+        android:textColor="@color/white"
+        android:textSize="16sp" />
 </LinearLayout>

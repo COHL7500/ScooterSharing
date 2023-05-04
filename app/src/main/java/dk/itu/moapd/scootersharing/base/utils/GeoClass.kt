@@ -32,7 +32,7 @@ abstract class GeoClass: Fragment() {
         locationService = LocationService()
     }
 
-    private val locationReceiver = object : BroadcastReceiver() {
+    protected open val locationReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             val latitude = intent.getDoubleExtra("latitude", 0.0)
             val longitude = intent.getDoubleExtra("longitude", 0.0)
@@ -40,9 +40,9 @@ abstract class GeoClass: Fragment() {
         }
     }
 
-    private fun Long.toDateString(): String {
+    protected fun Long.toDateString(): String {
         val date = Date(this)
-        val format = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
+        val format = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
         return format.format(date)
     }
 
