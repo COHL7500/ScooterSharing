@@ -26,12 +26,12 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
-import dk.itu.moapd.scootersharing.base.fragments.MainFragment
 import dk.itu.moapd.scootersharing.base.R
 import dk.itu.moapd.scootersharing.base.databinding.ActivityMainBinding
+import dk.itu.moapd.scootersharing.base.fragments.MainFragment
 
 /**
- Class for binding the view and instantiating Scooter.
+Class for binding the view and instantiating Scooter.
  */
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding

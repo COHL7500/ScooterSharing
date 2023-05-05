@@ -1,6 +1,7 @@
 package dk.itu.moapd.scootersharing.base.fragments
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -8,7 +9,6 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.location.Geocoder
-import android.location.Location.distanceBetween
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -38,7 +38,6 @@ import dk.itu.moapd.scootersharing.base.services.LocationService
 import dk.itu.moapd.scootersharing.base.utils.GeoClass
 import java.io.ByteArrayOutputStream
 import java.util.*
-import kotlin.math.roundToInt
 
 class RentedRideFragment : GeoClass(), OnMapReadyCallback {
 
@@ -70,18 +69,24 @@ class RentedRideFragment : GeoClass(), OnMapReadyCallback {
         geoCoder = Geocoder(requireContext(), Locale.getDefault())
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         _binding = FragmentRentedRideBinding.inflate(inflater, container, false)
 
-        val fragment = childFragmentManager.findFragmentById(R.id.google_maps) as SupportMapFragment?
+        val fragment =
+            childFragmentManager.findFragmentById(R.id.google_maps) as SupportMapFragment?
         fragment?.getMapAsync(this)
 
         auth.currentUser?.let { user ->
-           database.child("scooters").orderByChild("rentedBy").equalTo(user.uid).get().addOnSuccessListener{
-               scooterId = it.children.first().key.toString()
-               scooter = it.child(scooterId).getValue(Scooter::class.java)
-               userId = user.uid
-           }
+            database.child("scooters").orderByChild("rentedBy").equalTo(user.uid).get()
+                .addOnSuccessListener {
+                    scooterId = it.children.first().key.toString()
+                    scooter = it.child(scooterId).getValue(Scooter::class.java)
+                    userId = user.uid
+                }
         }
 
         return binding.root
@@ -117,7 +122,7 @@ class RentedRideFragment : GeoClass(), OnMapReadyCallback {
             val uploadTask = lastPhotoRef.child("${scooterId}.jpg").putBytes(data)
 
             uploadTask.addOnSuccessListener {
-                stopScooterRide(scooterId, userId, scooterTimestamp)
+                stopScooterRide(scooterId, scooterTimestamp)
                 Log.d("FirebaseBucket", "Image uploaded successfully")
             }.addOnFailureListener {
                 Log.e("FIREBASE_BUCKET", "Could not upload image")
@@ -125,7 +130,7 @@ class RentedRideFragment : GeoClass(), OnMapReadyCallback {
         }
     }
 
-    private fun stopScooterRide(scooterId: String, userID: String, timestamp: Long){
+    private fun stopScooterRide(scooterId: String, timestamp: Long) {
         val scooter = database.child("scooters").child(scooterId)
         scooter.get().addOnSuccessListener {
             MaterialAlertDialogBuilder(requireContext())
@@ -143,24 +148,39 @@ class RentedRideFragment : GeoClass(), OnMapReadyCallback {
         }
     }
 
-    private fun bitMapFromVector(vectorResID:Int): BitmapDescriptor {
-        val vectorDrawable= ContextCompat.getDrawable(requireContext(),vectorResID)
-        vectorDrawable!!.setBounds(0,0, vectorDrawable.intrinsicWidth,vectorDrawable.intrinsicHeight)
-        val bitmap=
-            Bitmap.createBitmap(vectorDrawable.intrinsicWidth,vectorDrawable.intrinsicHeight,Bitmap.Config.ARGB_8888)
-        val canvas= Canvas(bitmap)
+    private fun bitMapFromVector(vectorResID: Int): BitmapDescriptor {
+        val vectorDrawable = ContextCompat.getDrawable(requireContext(), vectorResID)
+        vectorDrawable!!.setBounds(
+            0,
+            0,
+            vectorDrawable.intrinsicWidth,
+            vectorDrawable.intrinsicHeight
+        )
+        val bitmap =
+            Bitmap.createBitmap(
+                vectorDrawable.intrinsicWidth,
+                vectorDrawable.intrinsicHeight,
+                Bitmap.Config.ARGB_8888
+            )
+        val canvas = Canvas(bitmap)
         vectorDrawable.draw(canvas)
         return BitmapDescriptorFactory.fromBitmap(bitmap)
     }
 
     override val locationReceiver = object : BroadcastReceiver() {
+        @SuppressLint("SetTextI18n")
         override fun onReceive(context: Context, intent: Intent) {
 
             val latitude = intent.getDoubleExtra("latitude", 0.0)
             val longitude = intent.getDoubleExtra("longitude", 0.0)
-            var distance = distanceTo(latitude,longitude,scooter?.startLatitude!!,scooter?.startLongitude!!)[0]/1000
+            val distance = distanceTo(
+                latitude,
+                longitude,
+                scooter?.startLatitude!!,
+                scooter?.startLongitude!!
+            )[0] / 1000
 
-            coordinates = Pair(latitude,longitude)
+            coordinates = Pair(latitude, longitude)
             database.child("scooters").child(scooterId).get().addOnSuccessListener {
                 googleMap.moveCamera(
                     CameraUpdateFactory.newLatLngZoom(
@@ -171,20 +191,26 @@ class RentedRideFragment : GeoClass(), OnMapReadyCallback {
                 userMarker.position = LatLng(latitude, longitude)
                 binding.distanceRentedText.text = "${"%.2f".format(distance)} km"
                 binding.nameRentedTextview.text = scooter?.name
-                binding.speedRentedTextview.text = "${"%.2f".format(speed/100000000)} km/h"
+                binding.speedRentedTextview.text = "${"%.2f".format(speed / 100000000)} km/h"
                 binding.timeRentedTextview.text = (scooter?.timestamp?.let { it1 ->
                     System.currentTimeMillis().minus(
                         it1
                     )
                 })?.toDateString()
-                binding.priceRentedTextview.text = "${"%.2f".format(distance*50)} kr,-"
+                binding.priceRentedTextview.text = "${"%.2f".format(distance * 50)} kr,-"
             }
         }
     }
 
-    override fun onMapReady(googleMap: GoogleMap){
-        if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-            || ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
+    override fun onMapReady(googleMap: GoogleMap) {
+        if (ActivityCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+            || ActivityCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
         )
             return
 
@@ -195,9 +221,10 @@ class RentedRideFragment : GeoClass(), OnMapReadyCallback {
         googleMap.uiSettings.isScrollGesturesEnabled = false
         googleMap.uiSettings.isMyLocationButtonEnabled = false
 
-        userMarker = googleMap.addMarker(MarkerOptions()
-            .position(defLocITU)
-            .icon(bitMapFromVector(R.drawable.scooter_marker_icon_32))
+        userMarker = googleMap.addMarker(
+            MarkerOptions()
+                .position(defLocITU)
+                .icon(bitMapFromVector(R.drawable.scooter_marker_icon_32))
         )!!
 
         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(defLocITU, 15f))

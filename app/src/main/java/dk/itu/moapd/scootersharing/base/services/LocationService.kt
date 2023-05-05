@@ -32,7 +32,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.gms.location.*
 
 
-class LocationService: Service() {
+class LocationService : Service() {
     lateinit var fusedLocationProviderClient: FusedLocationProviderClient
     lateinit var locationCallback: LocationCallback
 
@@ -42,8 +42,7 @@ class LocationService: Service() {
         fun getService(): LocationService = this@LocationService
     }
 
-    override fun onBind(intent: Intent?): IBinder
-    {
+    override fun onBind(intent: Intent?): IBinder {
         return binder
     }
 
@@ -56,7 +55,7 @@ class LocationService: Service() {
 
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
-                locationResult.lastLocation?.let {location ->
+                locationResult.lastLocation?.let { location ->
                     val intent = Intent("location_result")
                     intent.putExtra("latitude", location.latitude)
                     intent.putExtra("longitude", location.longitude)
@@ -73,14 +72,17 @@ class LocationService: Service() {
             != PackageManager.PERMISSION_GRANTED
             || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
             != PackageManager.PERMISSION_GRANTED
-        )
-        {
+        ) {
             return START_NOT_STICKY
         }
 
         val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 10).build()
 
-        fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper())
+        fusedLocationProviderClient.requestLocationUpdates(
+            locationRequest,
+            locationCallback,
+            Looper.myLooper()
+        )
 
         return START_STICKY
     }

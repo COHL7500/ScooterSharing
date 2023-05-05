@@ -23,7 +23,10 @@ package dk.itu.moapd.scootersharing.base.utils
 import android.content.Context
 import android.util.Log
 import dk.itu.moapd.scootersharing.base.models.Scooter
-import java.io.*
+import java.io.BufferedReader
+import java.io.FileInputStream
+import java.io.IOException
+import java.io.InputStreamReader
 
 
 /**
@@ -60,7 +63,8 @@ class FileUtils(private val context: Context) {
             // Write the input data in the text file.
             fileOutputStream?.write(dataInBytes)
             fileOutputStream?.write(
-                lineSeparator?.toByteArray()!!)
+                lineSeparator?.toByteArray()!!
+            )
 
             // Release the text file resources.
             fileOutputStream?.flush()
@@ -134,7 +138,8 @@ class FileUtils(private val context: Context) {
                 // Write the item in the text file.
                 fileOutputStream?.write(data[i].toString().toByteArray())
                 fileOutputStream?.write(
-                    lineSeparator?.toByteArray()!!)
+                    lineSeparator?.toByteArray()!!
+                )
             }
 
             // Release the text file resources.

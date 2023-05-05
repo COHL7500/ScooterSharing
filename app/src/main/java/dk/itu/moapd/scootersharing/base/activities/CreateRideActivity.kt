@@ -25,8 +25,8 @@ package dk.itu.moapd.scootersharing.base.activities
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import dk.itu.moapd.scootersharing.base.R
-import dk.itu.moapd.scootersharing.base.fragments.CreateRideFragment
 import dk.itu.moapd.scootersharing.base.databinding.ActivityCreateRideBinding
+import dk.itu.moapd.scootersharing.base.fragments.CreateRideFragment
 
 /**
 Class for binding the view and instantiating Scooter.

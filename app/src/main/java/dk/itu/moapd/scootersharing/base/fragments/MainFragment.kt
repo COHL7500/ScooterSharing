@@ -25,19 +25,15 @@ package dk.itu.moapd.scootersharing.base.fragments
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
 import android.os.Build
 import android.os.Bundle
-import android.provider.Settings.Global.getString
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.Toast
 import androidx.annotation.RequiresApi
-import androidx.core.app.ActivityCompat.requestPermissions
-import androidx.core.content.ContentProviderCompat.requireContext
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat.checkSelfPermission
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseAuth
@@ -53,7 +49,6 @@ import dk.itu.moapd.scootersharing.base.R
 import dk.itu.moapd.scootersharing.base.activities.*
 import dk.itu.moapd.scootersharing.base.contracts.CameraContract
 import dk.itu.moapd.scootersharing.base.databinding.FragmentMainBinding
-import dk.itu.moapd.scootersharing.base.models.Scooter
 import dk.itu.moapd.scootersharing.base.utils.GeoClass
 
 class MainFragment : GeoClass() {
@@ -78,27 +73,30 @@ class MainFragment : GeoClass() {
 
     val scanQRCodePhoto = registerForActivityResult(CameraContract()) { bitmap ->
         bitmap?.let {
-            val scanner = BarcodeScanning.getClient(BarcodeScannerOptions.Builder()
-                .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
-                .build())
+            val scanner = BarcodeScanning.getClient(
+                BarcodeScannerOptions.Builder()
+                    .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
+                    .build()
+            )
             scanner.process(InputImage.fromBitmap(bitmap, 0))
                 .addOnSuccessListener { barcodes ->
-                    if(barcodes.isEmpty()) {
-                        debugAlert("Scanning failed!","No QR code got recognised in the photo!")
+                    if (barcodes.isEmpty()) {
+                        debugAlert("Scanning failed!", "No QR code got recognised in the photo!")
                         return@addOnSuccessListener
                     }
-                    Log.d("QR_SCANNED_SUCCESS",barcodes.first().rawValue.toString())
+                    Log.d("QR_SCANNED_SUCCESS", barcodes.first().rawValue.toString())
                     startScooterRide(barcodes.first().rawValue.toString())
                 }.addOnFailureListener {
-                    Log.d("QR_SCANNED_FAILURE","")
+                    Log.d("QR_SCANNED_FAILURE", "")
                 }
         }
     }
 
-    private fun startScooterRide(scooterId: String){
+    private fun startScooterRide(scooterId: String) {
         auth.currentUser?.let { user ->
             val scooter = database.child("scooters").child(scooterId)
-            val userRents = database.child("scooters").orderByChild("rentedBy").equalTo(user.uid).get()
+            val userRents =
+                database.child("scooters").orderByChild("rentedBy").equalTo(user.uid).get()
             scooter.get().addOnSuccessListener {
                 if (it.child("isRented").value == false && userRents.result.childrenCount == 0L) {
                     MaterialAlertDialogBuilder(requireContext())
@@ -115,7 +113,10 @@ class MainFragment : GeoClass() {
                             startActivity(intent)
                         }.show()
                 } else {
-                    debugAlert("Scooter already rented!", "The scooter '${it.child("name").value}' is already rented by someone else!")
+                    debugAlert(
+                        "Scooter already rented!",
+                        "The scooter '${it.child("name").value}' is already rented by someone else!"
+                    )
                 }
             }.addOnFailureListener {
                 debugAlert("Scooter not found!", "A scooter with that ID was not found!")
@@ -123,7 +124,7 @@ class MainFragment : GeoClass() {
         }
     }
 
-    private fun debugAlert(title: String, message: String?){
+    private fun debugAlert(title: String, message: String?) {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(title)
             .setMessage(message)
@@ -131,11 +132,11 @@ class MainFragment : GeoClass() {
             .show()
     }
 
-    private fun checkStatus(){
-        auth.currentUser?.let { user ->
+    private fun checkStatus() {
+        auth.currentUser?.let {
             val userRents = database.child("scooters").orderByChild("rentedBy").equalTo(auth.uid)
             userRents.get().addOnCompleteListener {
-                if(it.isSuccessful && it.result.hasChildren()){
+                if (it.isSuccessful && it.result.hasChildren()) {
                     binding.startRideButton.visibility = View.GONE
                     binding.rentedRideButton.visibility = View.VISIBLE
                 }
@@ -143,7 +144,11 @@ class MainFragment : GeoClass() {
         }
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         _binding = FragmentMainBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -153,7 +158,8 @@ class MainFragment : GeoClass() {
         super.onViewCreated(view, savedInstanceState)
 
         binding.startRideButton.setOnClickListener {
-            Toast.makeText(activity, "Take a picture of Scooter's QR Code!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(activity, "Take a picture of Scooter's QR Code!", Toast.LENGTH_SHORT)
+                .show()
             scanQRCodePhoto.launch(Unit)
         }
 
@@ -165,8 +171,10 @@ class MainFragment : GeoClass() {
         binding.signOutButton.setOnClickListener {
             auth.signOut()
 
-            Toast.makeText(activity, "User logged out of the app.",
-                Toast.LENGTH_SHORT)
+            Toast.makeText(
+                activity, "User logged out of the app.",
+                Toast.LENGTH_SHORT
+            )
                 .show()
             val intent = Intent(activity, LoginActivity::class.java)
             startActivity(intent)
@@ -189,7 +197,11 @@ class MainFragment : GeoClass() {
     private fun permissionsToRequest(permissions: ArrayList<String>): ArrayList<String> {
         val result: ArrayList<String> = ArrayList()
         for (permission in permissions)
-            if (checkSelfPermission(requireContext(), permission) != PackageManager.PERMISSION_GRANTED)
+            if (checkSelfPermission(
+                    requireContext(),
+                    permission
+                ) != PackageManager.PERMISSION_GRANTED
+            )
                 result.add(permission)
 
         return result
@@ -206,7 +218,7 @@ class MainFragment : GeoClass() {
         val permissionsToRequest = permissionsToRequest(permissions)
 
         if (permissionsToRequest.size > 0)
-            requestPermissions(permissionsToRequest.toTypedArray(), ALL_PERMISSIONS_RESULT)
+            ActivityCompat.requestPermissions(requireActivity(), permissionsToRequest.toTypedArray(), ALL_PERMISSIONS_RESULT)
     }
 
     override fun onResume() {

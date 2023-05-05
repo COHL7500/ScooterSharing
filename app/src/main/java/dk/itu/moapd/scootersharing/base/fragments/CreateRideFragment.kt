@@ -5,21 +5,19 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
+import androidx.fragment.app.Fragment
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.firebase.ui.database.FirebaseRecyclerOptions
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ktx.database
-import com.google.firebase.ktx.Firebase
 import dk.itu.moapd.scootersharing.base.R
 import dk.itu.moapd.scootersharing.base.activities.MainActivity
 import dk.itu.moapd.scootersharing.base.adapters.CustomFirebaseAdapter
@@ -38,7 +36,7 @@ class CreateRideFragment : Fragment() {
     private lateinit var scooterName: EditText
     private lateinit var scooterLocation: EditText
     private lateinit var startRideButton: Button
-    private lateinit var coordLocation: Pair<Double,Double>
+    private lateinit var coordLocation: Pair<Double, Double>
     private lateinit var broadcastManager: LocalBroadcastManager
 
     private lateinit var auth: FirebaseAuth
@@ -106,9 +104,15 @@ class CreateRideFragment : Fragment() {
 
                         if (name.isNotEmpty()) {
                             val timestamp = randomDate()
-                            val scooter = Scooter(name = name, startLongitude = coordLocation.first, startLatitude = coordLocation.second, timestamp = timestamp, img = "scooter_thumbnail.png")
+                            val scooter = Scooter(
+                                name = name,
+                                startLongitude = coordLocation.first,
+                                startLatitude = coordLocation.second,
+                                timestamp = timestamp,
+                                img = "scooter_thumbnail.png"
+                            )
 
-                            auth.currentUser?.let { user ->
+                            auth.currentUser?.let {
                                 val uid = database.child("scooters").push().key
                                 uid?.let {
                                     database.child("scooters").child(it).setValue(scooter)
@@ -126,8 +130,10 @@ class CreateRideFragment : Fragment() {
                     }.show()
             } else {
 
-                Toast.makeText(context, "Please fill out the field!",
-                Toast.LENGTH_SHORT)
+                Toast.makeText(
+                    context, "Please fill out the field!",
+                    Toast.LENGTH_SHORT
+                )
                     .show()
             }
         }
@@ -141,7 +147,12 @@ class CreateRideFragment : Fragment() {
     override fun onResume() {
         super.onResume()
 
-        requireActivity().startService(Intent(requireContext(), dk.itu.moapd.scootersharing.base.services.LocationService::class.java))
+        requireActivity().startService(
+            Intent(
+                requireContext(),
+                dk.itu.moapd.scootersharing.base.services.LocationService::class.java
+            )
+        )
 
         val filter = IntentFilter("location_result")
         broadcastManager.registerReceiver(locationReceiver, filter)
@@ -150,7 +161,12 @@ class CreateRideFragment : Fragment() {
     override fun onPause() {
         super.onPause()
 
-        requireActivity().stopService(Intent(requireContext(), dk.itu.moapd.scootersharing.base.services.LocationService::class.java))
+        requireActivity().stopService(
+            Intent(
+                requireContext(),
+                dk.itu.moapd.scootersharing.base.services.LocationService::class.java
+            )
+        )
         broadcastManager.unregisterReceiver(locationReceiver)
     }
 
@@ -161,8 +177,10 @@ class CreateRideFragment : Fragment() {
 
         val message = "Ride started using ${scooterName.text}."
 
-        Toast.makeText(context, message,
-            Toast.LENGTH_SHORT)
+        Toast.makeText(
+            context, message,
+            Toast.LENGTH_SHORT
+        )
             .show()
 
     }

@@ -13,18 +13,15 @@ import android.location.Geocoder
 import android.location.Location
 import android.os.Bundle
 import android.view.View
-import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.fragment.app.Fragment
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import dk.itu.moapd.scootersharing.base.services.LocationService
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-import java.util.TimeZone
+import java.util.*
 import kotlin.math.pow
 import kotlin.math.sqrt
 
-abstract class GeoClass: Fragment() {
+abstract class GeoClass : Fragment() {
     private lateinit var locationService: LocationService
     private lateinit var broadcastManager: LocalBroadcastManager
     private lateinit var geoCoder: Geocoder
@@ -34,10 +31,10 @@ abstract class GeoClass: Fragment() {
     private var lastSpeed: Double = 0.0
     protected var speed: Double = 0.0
     private var maxSpeed: Double = 0.0 // String.format("%.2f", maxSpeed).toDouble()
-    protected lateinit var coordinates: Pair<Double,Double>
+    protected lateinit var coordinates: Pair<Double, Double>
 
     companion object {
-        private fun Address.toAddressString() : String {
+        private fun Address.toAddressString(): String {
             val address = this
             val stringBuilder = StringBuilder()
             stringBuilder.apply {
@@ -45,13 +42,20 @@ abstract class GeoClass: Fragment() {
             }
             return stringBuilder.toString()
         }
+
         @Suppress("DEPRECATION")
-        fun getAddress(context: Context, latitude: Double, longitude: Double) : String? {
+        fun getAddress(context: Context, latitude: Double, longitude: Double): String? {
             val geocoder = Geocoder(context, Locale.getDefault())
-            return geocoder.getFromLocation(latitude, longitude, 1)?.firstOrNull()?.toAddressString()
+            return geocoder.getFromLocation(latitude, longitude, 1)?.firstOrNull()
+                ?.toAddressString()
         }
-        
-        fun distanceTo(latitude1: Double, longitude1: Double, latitude2: Double, longitude2: Double) : FloatArray {
+
+        fun distanceTo(
+            latitude1: Double,
+            longitude1: Double,
+            latitude2: Double,
+            longitude2: Double
+        ): FloatArray {
             val distance = FloatArray(3)
             Location.distanceBetween(latitude1, longitude1, latitude2, longitude2, distance)
             return distance
@@ -75,13 +79,13 @@ abstract class GeoClass: Fragment() {
         override fun onReceive(context: Context, intent: Intent) {
             val latitude = intent.getDoubleExtra("latitude", 0.0)
             val longitude = intent.getDoubleExtra("longitude", 0.0)
-            coordinates = Pair(latitude,longitude)
+            coordinates = Pair(latitude, longitude)
         }
     }
 
     protected fun Long.toDateString(): String {
         val format = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
-        format.setTimeZone(TimeZone.getTimeZone("UTC"))
+        format.timeZone = TimeZone.getTimeZone("UTC")
         return format.format(this)
     }
 
@@ -118,7 +122,11 @@ abstract class GeoClass: Fragment() {
         super.onResume()
         requireActivity().startService(Intent(requireContext(), LocationService::class.java))
         broadcastManager.registerReceiver(locationReceiver, IntentFilter("location_result"))
-        sensorManager.registerListener(accelerationListener, accelerationSensor, SensorManager.SENSOR_DELAY_NORMAL)
+        sensorManager.registerListener(
+            accelerationListener,
+            accelerationSensor,
+            SensorManager.SENSOR_DELAY_NORMAL
+        )
     }
 
     override fun onPause() {
