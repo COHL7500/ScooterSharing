@@ -87,7 +87,6 @@ class ListRidesFragment : GeoClass() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         binding.recyclerView.layoutManager = LinearLayoutManager(activity)
         binding.recyclerView.addItemDecoration(DividerItemDecoration(activity, DividerItemDecoration.VERTICAL))
         binding.recyclerView.adapter = adapter

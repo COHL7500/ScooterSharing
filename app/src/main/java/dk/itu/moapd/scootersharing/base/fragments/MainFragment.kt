@@ -99,7 +99,6 @@ class MainFragment : GeoClass() {
         auth.currentUser?.let { user ->
             val scooter = database.child("scooters").child(scooterId)
             val userRents = database.child("scooters").orderByChild("rentedBy").equalTo(user.uid).get()
-
             scooter.get().addOnSuccessListener {
                 if (it.child("isRented").value == false && userRents.result.childrenCount == 0L) {
                     MaterialAlertDialogBuilder(requireContext())
@@ -134,14 +133,11 @@ class MainFragment : GeoClass() {
 
     private fun checkStatus(){
         auth.currentUser?.let { user ->
-            val userRents = database.child("scooters").child("-NUSloF3MzuA_sVhIC0l")
+            val userRents = database.child("scooters").orderByChild("rentedBy").equalTo(auth.uid)
             userRents.get().addOnCompleteListener {
-                if(it.isSuccessful){
-                    val scooter = it.result.getValue(Scooter::class.java)
-                    if(scooter?.isRented == true) {
-                        binding.startRideButton.visibility = View.GONE
-                        binding.rentedRideButton.visibility = View.VISIBLE
-                    }
+                if(it.isSuccessful && it.result.hasChildren()){
+                    binding.startRideButton.visibility = View.GONE
+                    binding.rentedRideButton.visibility = View.VISIBLE
                 }
             }
         }
